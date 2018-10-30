@@ -1,4 +1,6 @@
 *.json
 *.pyc
 *.gv
+*.pt
+*.pth
 __pycache__
