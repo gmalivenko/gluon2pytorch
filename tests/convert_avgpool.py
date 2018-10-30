@@ -3,8 +3,6 @@ import torch
 import mxnet as mx
 import numpy as np
 import sys
-
-sys.path.append('../')
 from gluon2pytorch import gluon2pytorch
 
 
