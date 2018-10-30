@@ -213,11 +213,69 @@ def convert_elemwise_add(i, op, gluon_nodes, gluon_dict, pytorch_dict):
     return '', call_str
 
 
+def convert_flatten(i, op, gluon_nodes, gluon_dict, pytorch_dict):
+    call_tmp = ' ' * 8 + 'x{i} = x{l}.view(x{l}.size(0), -1)'
+
+    if len(op['inputs']) == 0:
+        input_names = ['']
+    else:
+        input_names = [str(op['inputs'][0])]
+
+    call_str = call_tmp.format(**{
+        'i': i,
+        'l': input_names[0],
+    })
+
+    print(call_str)
+    return '', call_str
+
+
+def convert_linear(i, op, gluon_nodes, gluon_dict, pytorch_dict):
+    init_tmp = ' ' * 8 + 'self.x{i} = nn.Linear({in_channels}, {out_channels}, bias={use_bias})'
+
+    if op['attrs']['flatten'] == 'True':
+        call_tmp = ' ' * 8 + 'x{i} = self.x{i}(x{inp}.view(x{inp}.size(0), -1))'
+    else:
+        call_tmp = ' ' * 8 + 'x{i} = self.x{i}(x{inp})'
+
+    
+    use_bias = not bool(op['attrs']['no_bias'])
+    weights = gluon_dict[op['name'] + '_weight'].data().asnumpy()
+    bias = None
+
+    pytorch_dict['x{i}.weight'.format(i=i)] = torch.FloatTensor(weights)
+    if use_bias:
+        bias = gluon_dict[op['name'] + '_bias'].data.asnumpy()
+        pytorch_dict['x{i}.bias'.format(i=i)] = torch.FloatTensor(bias)
+
+    if len(op['inputs']) == 0:
+        input_name = ''
+    else:
+        input_name = op['inputs'][0]
+
+    init_str = init_tmp.format(**{
+        'i': i,
+        'in_channels': weights.shape[1],
+        'out_channels': weights.shape[0],
+        'use_bias': use_bias,
+    })
+
+    call_str = call_tmp.format(**{
+        'i': i,
+        'inp': input_name
+    })
+    
+    print(init_str, call_str)
+    return init_str, call_str
+
+
 # Here will be converters.
 CONVERTERS = {
     'Activation': convert_activation,
     'BatchNorm': convert_batchnorm,
     'Convolution': convert_conv,
+    'Flatten': convert_flatten,
+    'FullyConnected': convert_linear,
     'Pooling': convert_pooling,
     'relu': convert_relu,
     'sigmoid': convert_sigmoid,
