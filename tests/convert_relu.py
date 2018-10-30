@@ -14,7 +14,7 @@ class ReLUTest(mx.gluon.nn.HybridSequential):
         from mxnet.gluon import nn
         with self.name_scope():
             self.conv1 = nn.Conv2D(3, 32)
-            self.relu = nn.ReLU()
+            self.relu = nn.Activation('relu')
 
     def hybrid_forward(self, F, x):
         x = self.relu(self.conv1(x))
