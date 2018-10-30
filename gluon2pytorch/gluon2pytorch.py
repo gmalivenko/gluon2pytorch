@@ -9,10 +9,10 @@ import mxnet as mx
 import numpy as np
 
 # Import comverters
-from layers import CONVERTERS
+from .layers import CONVERTERS
 
 # Import PyTorch model template
-from pytorch_model_template import pytorch_model_template
+from .pytorch_model_template import pytorch_model_template
 
     
 def eval_model(pytorch_source, pytorch_dict, module_name):
