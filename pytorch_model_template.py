@@ -1,11 +1,18 @@
-pytorch_model_template = """
-import torch
+pytorch_model_template = """import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
-class {0}(nn.Module):
+class {module_name}(nn.Module):
     def __init__(self):
-        super({0}, self).__init__()
-        {1}
+        super({module_name}, self).__init__()
+{inits}
     def forward(self, x):
-        {2}
+{calls}
+        return x{last}
+
+if __name__ == '__main__':
+    net = {module_name}()
+    net.load_state_dict(torch.load('{module_name}.pth'))
+    net.eval()
+    print(net(torch.ones(1, 3, 224, 224)))
 """
