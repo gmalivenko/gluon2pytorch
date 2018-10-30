@@ -1,0 +1,4 @@
+*.json
+*.pyc
+*.gv
+__pycache__
