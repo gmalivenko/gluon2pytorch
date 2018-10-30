@@ -30,6 +30,7 @@ if __name__ == '__main__':
     net.collect_params().initialize()
 
     pytorch_model = gluon2pytorch(net, dst_dir=None, pytorch_module_name='resnet50_v2')
+    pytorch_model.eval()
 
     input_np = np.random.uniform(0, 1, (1, 3, 224, 224))
 
