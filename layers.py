@@ -15,9 +15,9 @@ def convert_conv(i, op, gluon_nodes, gluon_dict, pytorch_dict):
     assert(op['attrs']['layout'] == 'NCHW')
 
     init_tmp = ' ' * 8 +\
-    	'self.x{i} = nn.Conv2d({in_channels}, {out_channels}, kernel_size={kernel_size}, stride={strides}, bias={use_bias}, groups={num_group}, padding={padding})'
+        'self.x{i} = nn.Conv2d({in_channels}, {out_channels}, kernel_size={kernel_size}, stride={strides}, bias={use_bias}, groups={num_group}, padding={padding})'
     call_tmp = ' ' * 8 +\
-    	'x{i} = self.x{i}(x{inp})'
+        'x{i} = self.x{i}(x{inp})'
 
     weights = gluon_dict[op['name'] + '_weight'].data().asnumpy()
    
@@ -53,7 +53,61 @@ def convert_conv(i, op, gluon_nodes, gluon_dict, pytorch_dict):
     return init_str, call_str
     
 
+def convert_relu(i, op, gluon_nodes, gluon_dict, pytorch_dict):
+    call_tmp = ' ' * 8 + 'x{i} = self.x{i}(x{inp})'
+    init_tmp = ' ' * 8 + 'self.x{i} = nn.ReLU()'
+    
+    if len(op['inputs']) == 0:
+        input_name = ''
+    else:
+        input_name = op['inputs'][0]
+
+    init_str = init_tmp.format(**{
+        'i': i,
+    })
+
+    call_str = call_tmp.format(**{
+        'i': i,
+        'inp': input_name
+    })
+
+    print(init_str, call_str)
+    return init_str, call_str
+
+
+def convert_sigmoid(i, op, gluon_nodes, gluon_dict, pytorch_dict):
+    call_tmp = ' ' * 8 + 'x{i} = self.x{i}(x{inp})'
+    init_tmp = ' ' * 8 + 'self.x{i} = nn.Sigmoid()'
+    
+    if len(op['inputs']) == 0:
+        input_name = ''
+    else:
+        input_name = op['inputs'][0]
+
+    init_str = init_tmp.format(**{
+        'i': i,
+    })
+
+    call_str = call_tmp.format(**{
+        'i': i,
+        'inp': input_name
+    })
+
+    print(init_str, call_str)
+    return init_str, call_str
+
+
+def convert_activation(i, op, gluon_nodes, gluon_dict, pytorch_dict):
+    if op['attrs']['act_type'] == 'relu':
+        return convert_relu(i, op, gluon_nodes, gluon_dict, pytorch_dict)
+    elif op['attrs']['act_type'] == 'sigmoid':
+        return convert_sigmoid(i, op, gluon_nodes, gluon_dict, pytorch_dict)
+
+    
 # Here will be converters.
 CONVERTERS = {
-	'Convolution': convert_conv,
+    'Convolution': convert_conv,
+    'Activation': convert_activation,
+    'relu': convert_relu,
+    'sigmoid': convert_sigmoid,
 }
