@@ -17,7 +17,7 @@ class ReLUTest(mx.gluon.nn.HybridSequential):
             self.relu = nn.Activation('relu')
 
     def hybrid_forward(self, F, x):
-        x = self.relu(self.conv1(x))
+        x = F.relu(self.relu(self.conv1(x)))
         return x
 
 def check_error(gluon_output, pytorch_output, epsilon=1e-5):
