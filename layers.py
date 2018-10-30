@@ -97,6 +97,42 @@ def convert_sigmoid(i, op, gluon_nodes, gluon_dict, pytorch_dict):
     return init_str, call_str
 
 
+def convert_batchnorm(i, op, gluon_nodes, gluon_dict, pytorch_dict):
+    init_tmp = ' ' * 8 + 'self.x{i} = nn.BatchNorm2d({in_channels}, momentum={momentum}, eps={eps})'
+    call_tmp = ' ' * 8 + 'x{i} = self.x{i}(x{inp})'
+
+    gamma = gluon_dict[op['name'] + '_gamma'].data().asnumpy()
+    beta = gluon_dict[op['name'] + '_beta'].data().asnumpy()
+    running_mean = gluon_dict[op['name'] + '_running_mean'].data().asnumpy()
+    running_var = gluon_dict[op['name'] + '_running_var'].data().asnumpy()
+
+    pytorch_dict['x{i}.weight'.format(i=i)] = torch.FloatTensor(gamma) 
+    pytorch_dict['x{i}.bias'.format(i=i)] = torch.FloatTensor(beta)
+
+    pytorch_dict['x{i}.running_mean'.format(i=i)] = torch.FloatTensor(running_mean)  
+    pytorch_dict['x{i}.running_var'.format(i=i)] = torch.FloatTensor(running_var) 
+
+    if len(op['inputs']) == 0:
+        input_name = ''
+    else:
+        input_name = op['inputs'][0]
+
+    init_str = init_tmp.format(**{
+        'i': i,
+        'in_channels': gamma.shape[0],
+        'momentum': op['attrs']['momentum'],
+        'eps': op['attrs']['eps'],
+    })
+
+    call_str = call_tmp.format(**{
+        'i': i,
+        'inp': input_name
+    })
+
+    print(init_str, call_str)
+    return init_str, call_str
+
+
 def convert_activation(i, op, gluon_nodes, gluon_dict, pytorch_dict):
     if op['attrs']['act_type'] == 'relu':
         return convert_relu(i, op, gluon_nodes, gluon_dict, pytorch_dict)
@@ -106,8 +142,9 @@ def convert_activation(i, op, gluon_nodes, gluon_dict, pytorch_dict):
     
 # Here will be converters.
 CONVERTERS = {
-    'Convolution': convert_conv,
     'Activation': convert_activation,
+    'BatchNorm': convert_batchnorm,
+    'Convolution': convert_conv,
     'relu': convert_relu,
     'sigmoid': convert_sigmoid,
 }
