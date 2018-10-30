@@ -139,12 +139,67 @@ def convert_activation(i, op, gluon_nodes, gluon_dict, pytorch_dict):
     elif op['attrs']['act_type'] == 'sigmoid':
         return convert_sigmoid(i, op, gluon_nodes, gluon_dict, pytorch_dict)
 
+
+def convert_pooling(i, op, gluon_nodes, gluon_dict, pytorch_dict):
+    # {'name': 'resnet18_v1_pool0', 'type': 'Pooling', 'inputs': array([2]),
+    #'attrs': {'global_pool': 'False', 'kernel': '(3, 3)', 'pad': '(1, 1)', 'pool_type': 'max', 'pooling_convention': 'valid', 'stride': '(2, 2)'}}
+
+    if len(op['inputs']) == 0:
+        input_name = ''
+    else:
+        input_name = op['inputs'][0]
+
+    if op['attrs']['global_pool'] == 'True':
+        if op['attrs']['pool_type'] == 'max':
+            init_tmp = ''
+            call_tmp = ' ' * 8 + 'x{i} = F.adaptive_max_pool2d(x{inp}, (1, 1))'
+        elif op['attrs']['pool_type'] == 'avg':
+            init_tmp = ''
+            call_tmp = ' ' * 8 + 'x{i} = F.adaptive_avg_pool2d(x{inp}, (1, 1))'
+        else:
+            raise 'Unknown pooling'
+
+        init_str = ''
+
+        call_str = call_tmp.format(**{
+            'i': i,
+            'inp': input_name
+        })
+
+    else:
+        if op['attrs']['pool_type'] == 'max':
+            init_tmp = ' ' * 8 + 'self.x{i} = nn.MaxPool2d(kernel_size={kernel_size}, stride={stride}, padding={padding})'
+            call_tmp = ' ' * 8 + 'x{i} = self.x{i}(x{inp})'
+        elif op['attrs']['pool_type'] == 'avg':
+            init_tmp = ' ' * 8 + 'self.x{i} = nn.AvgPool2d(kernel_size={kernel_size}, stride={stride}, padding={padding})'
+            call_tmp = ' ' * 8 + 'x{i} = self.x{i}(x{inp})'
+        else:
+            raise 'Unknown pooling'
+
     
+
+        init_str = init_tmp.format(**{
+            'i': i,
+            'kernel_size': op['attrs']['kernel'],
+            'stride': op['attrs']['stride'],
+            'padding': op['attrs']['pad'],
+        })
+
+        call_str = call_tmp.format(**{
+            'i': i,
+            'inp': input_name
+        })
+
+    print(init_str, call_str)
+    return init_str, call_str
+
+
 # Here will be converters.
 CONVERTERS = {
     'Activation': convert_activation,
     'BatchNorm': convert_batchnorm,
     'Convolution': convert_conv,
+    'Pooling': convert_pooling,
     'relu': convert_relu,
     'sigmoid': convert_sigmoid,
 }
