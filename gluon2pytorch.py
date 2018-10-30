@@ -1,33 +1,56 @@
-import mxnet as mx
 import json
+import os
+
+import torch
+import torch.nn as nn
+
+import mxnet as mx
+import numpy as np
 
 # Import comverters
 from layers import CONVERTERS
 
+# Import PyTorch model template
+from pytorch_model_template import pytorch_model_template
 
-def eval_model(pytorch_source, module_name):
-    eval(pytorch_source)
-    return globals[module_name]
+    
+def eval_model(pytorch_source, pytorch_dict, module_name):
+
+    # Tricky code
+    exec(pytorch_source)
+    globals()[module_name] = locals()[module_name]
+    pytorch_model = locals()[module_name]()
+    pytorch_model.load_state_dict(pytorch_dict)
+    return pytorch_model
 
 
-def render_module(inits, calls, pytorch_dict, module_name):
+def render_module(inits, calls, dst_dir, pytorch_dict, pytorch_module_name):
     """
     Render model.
     """
 
     output = pytorch_model_template.format(**{
-        'module_name': module_name,
+        'module_name': pytorch_module_name,
+        'module_name_lower': pytorch_module_name.lower(),
         'inits': '\n'.join(inits),
         'calls': '\n'.join(calls),
         'last': len(calls) - 1
     })
 
-    import torch
-    torch.save(pytorch_dict, module_name + '.pth')
+    if dst_dir is not None:
+        import os, errno
 
-    with open('result.py', 'w') as f:
-        f.write(output)
-        f.close()
+        try:
+            os.makedirs(dst_dir)
+        except OSError as e:
+            if e.errno != errno.EEXIST:
+                raise
+
+        with open(os.path.join(dst_dir, pytorch_module_name.lower() + '.py'), 'w+') as f:
+            f.write(output)
+            f.close()
+      
+        torch.save(pytorch_dict, os.path.join(dst_dir, pytorch_module_name.lower() + '.pt'))
 
     return output
 
@@ -37,7 +60,7 @@ def gluon2pytorch(net, dst_dir, pytorch_module_name, debug=True):
     Function to convert a model.
     """
 
-    # x = net(mx.nd.array(np.ones((1, 3, 224, 224))))
+    x = net(mx.nd.array(np.ones((1, 3, 224, 224))))
     # print(x)
 
     # Get network params
@@ -103,6 +126,6 @@ def gluon2pytorch(net, dst_dir, pytorch_module_name, debug=True):
         else:
             raise AttributeError('Layer isnt supported')
 
-    pytorch_source = render_module(inits, calls, dst_dir, pytorch_module_name)
+    pytorch_source = render_module(inits, calls, dst_dir, pytorch_dict, pytorch_module_name)
 
-    return eval_model(pytorch_source, pytorch_module_name)
+    return eval_model(pytorch_source, pytorch_dict, pytorch_module_name)
