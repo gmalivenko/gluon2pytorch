@@ -8,19 +8,17 @@ sys.path.append('../')
 from gluon2pytorch import gluon2pytorch
 
 
-class BNTest(mx.gluon.nn.HybridSequential):
+class MaxPoolTest(mx.gluon.nn.HybridSequential):
     def __init__(self):
-        super(BNTest, self).__init__()
+        super(MaxPoolTest, self).__init__()
         from mxnet.gluon import nn
         with self.name_scope():
             self.conv1 = nn.Conv2D(3, 32)
-            self.relu = nn.Activation('relu')
-            self.bn = nn.BatchNorm()
+            self.pool = nn.MaxPool2D(pool_size=(2, 2))
 
     def hybrid_forward(self, F, x):
-        x = self.bn(self.relu(self.conv1(x)))
+        x = F.relu(self.pool(self.conv1(x)))
         return x
-
 
 def check_error(gluon_output, pytorch_output, epsilon=1e-5):
     pytorch_output = pytorch_output.data.numpy()
@@ -34,16 +32,15 @@ def check_error(gluon_output, pytorch_output, epsilon=1e-5):
 
 
 if __name__ == '__main__':
-    print('Test bn:')
+    print('Test maxpool:')
 
-    net = BNTest()
+    net = MaxPoolTest()
     
     # Make sure it's hybrid and initialized
     net.hybridize()
     net.collect_params().initialize()
 
-    pytorch_model = gluon2pytorch(net, dst_dir=None, pytorch_module_name='BNTest')
-    pytorch_model.eval()
+    pytorch_model = gluon2pytorch(net, dst_dir=None, pytorch_module_name='MaxPoolTest')
 
     input_np = np.random.uniform(-1, 1, (1, 3, 224, 224))
 
