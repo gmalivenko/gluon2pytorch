@@ -194,6 +194,25 @@ def convert_pooling(i, op, gluon_nodes, gluon_dict, pytorch_dict):
     return init_str, call_str
 
 
+def convert_elemwise_add(i, op, gluon_nodes, gluon_dict, pytorch_dict):
+    call_tmp = ' ' * 8 + 'x{i} = x{l} + x{r}'
+
+    if len(op['inputs']) == 1:
+        input_names = ['', str(op['inputs'][0])]
+    else:
+        input_names = [str(op['inputs'][0]), str(op['inputs'][1])]
+
+    
+    call_str = call_tmp.format(**{
+        'i': i,
+        'l': input_names[0],
+        'r': input_names[1],
+    })
+
+    print(call_str)
+    return '', call_str
+
+
 # Here will be converters.
 CONVERTERS = {
     'Activation': convert_activation,
@@ -202,4 +221,5 @@ CONVERTERS = {
     'Pooling': convert_pooling,
     'relu': convert_relu,
     'sigmoid': convert_sigmoid,
+    'elemwise_add': convert_elemwise_add,
 }
