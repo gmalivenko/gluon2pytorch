@@ -89,7 +89,7 @@ Element-wise:
 * Addition
 * Concatenation
 
-## Models converted with pytorch2keras
+## Models converted with gluon2pytorch:
 
 * ResNet*
 * SeNet
