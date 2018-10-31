@@ -289,6 +289,50 @@ def convert_concat(i, op, gluon_nodes, gluon_dict, pytorch_dict):
     return '', call_str
 
 
+def convert_slice_axis(i, op, gluon_nodes, gluon_dict, pytorch_dict):
+    if op['attrs']['axis'] == '0':
+        call_tmp = ' ' * 8 + 'x{i} = x{l}[{start}:{end}]'
+    elif op['attrs']['axis'] == '1':
+        call_tmp = ' ' * 8 + 'x{i} = x{l}[:, {start}:{end}]'
+    elif op['attrs']['axis'] == '2':
+        call_tmp = ' ' * 8 + 'x{i} = x{l}[:, :, {start}:{end}]'
+    elif op['attrs']['axis'] == '3':
+        call_tmp = ' ' * 8 + 'x{i} = x{l}[:, :, :, {start}:{end}]'
+     
+    if len(op['inputs']) == 0:
+        input_names = ['']
+    else:
+        input_names = [str(op['inputs'][0])]
+    
+    call_str = call_tmp.format(**{
+        'i': i,
+        'l': input_names[0],
+        'start': op['attrs']['begin'],
+        'end': op['attrs']['end'] if op['attrs']['end'] != 'None' else '',
+    })
+
+    print(call_str)
+    return '', call_str
+
+
+def convert_mul_scalar(i, op, gluon_nodes, gluon_dict, pytorch_dict):
+    call_tmp = ' ' * 8 + 'x{i} = {scalar} * x{l}'
+     
+    if len(op['inputs']) == 0:
+        input_names = ['']
+    else:
+        input_names = [str(op['inputs'][0])]
+    
+    call_str = call_tmp.format(**{
+        'i': i,
+        'l': input_names[0],
+        'scalar': op['attrs']['scalar'],
+    })
+
+    print(call_str)
+    return '', call_str
+
+
 # Here will be converters.
 CONVERTERS = {
     'Activation': convert_activation,
@@ -301,4 +345,6 @@ CONVERTERS = {
     'relu': convert_relu,
     'sigmoid': convert_sigmoid,
     'elemwise_add': convert_elemwise_add,
+    'slice_axis': convert_slice_axis,
+    '_mul_scalar': convert_mul_scalar,
 }
