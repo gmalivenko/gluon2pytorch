@@ -13,6 +13,11 @@ cd gluon2pytorch
 pip install -e . 
 ```
 
+or you can use `pip`:
+
+```
+pip install gluon2pytorch
+```
 
 ## How to use
 
