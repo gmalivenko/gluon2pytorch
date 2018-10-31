@@ -48,7 +48,6 @@ The next step - call the converter:
 
 ```
     pytorch_model = gluon2pytorch(net, dst_dir=None, pytorch_module_name='ReLUTest')
-
 ```
 
 Finally, we can check the difference
