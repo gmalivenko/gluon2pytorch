@@ -12,7 +12,7 @@ class {module_name}(nn.Module):
 
 if __name__ == '__main__':
     net = {module_name}()
-    net.load_state_dict(torch.load('{module_name_lower}.pth'))
+    net.load_state_dict(torch.load('{module_name_lower}.pt'))
     net.eval()
     print(net(torch.ones(1, 3, 224, 224)))
 """
