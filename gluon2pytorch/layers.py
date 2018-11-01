@@ -426,6 +426,29 @@ def convert_dropout(i, op, gluon_nodes, gluon_dict, pytorch_dict):
     return init_str, call_str
 
 
+def convert_leaky_relu(i, op, gluon_nodes, gluon_dict, pytorch_dict):
+    call_tmp = ' ' * 8 + 'x{i} = self.x{i}(x{inp})'
+    init_tmp = ' ' * 8 + 'self.x{i} = nn.LeakyReLU(negative_slope={slope})'
+
+    if len(op['inputs']) == 0:
+        input_name = ''
+    else:
+        input_name = op['inputs'][0]
+
+    init_str = init_tmp.format(**{
+        'i': i,
+        'slope': op['attrs']['slope'],
+    })
+
+    call_str = call_tmp.format(**{
+        'i': i,
+        'inp': input_name,
+    })
+
+    print(init_str, call_str)
+    return init_str, call_str
+
+
 # Here will be converters.
 CONVERTERS = {
     'Activation': convert_activation,
@@ -446,4 +469,5 @@ CONVERTERS = {
     '_mul_scalar': convert_mul_scalar,
     '_contrib_AdaptiveAvgPooling2D': convert_adaptive_avg_pool,
     'broadcast_mul': convert_elemwise_mul,
+    'LeakyReLU': convert_leaky_relu,
 }
