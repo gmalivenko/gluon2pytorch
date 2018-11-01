@@ -141,9 +141,6 @@ def convert_activation(i, op, gluon_nodes, gluon_dict, pytorch_dict):
 
 
 def convert_pooling(i, op, gluon_nodes, gluon_dict, pytorch_dict):
-    # {'name': 'resnet18_v1_pool0', 'type': 'Pooling', 'inputs': array([2]),
-    #'attrs': {'global_pool': 'False', 'kernel': '(3, 3)', 'pad': '(1, 1)', 'pool_type': 'max', 'pooling_convention': 'valid', 'stride': '(2, 2)'}}
-
     if len(op['inputs']) == 0:
         input_name = ''
     else:
@@ -175,8 +172,6 @@ def convert_pooling(i, op, gluon_nodes, gluon_dict, pytorch_dict):
             call_tmp = ' ' * 8 + 'x{i} = self.x{i}(x{inp})'
         else:
             raise 'Unknown pooling'
-
-    
 
         init_str = init_tmp.format(**{
             'i': i,

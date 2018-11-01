@@ -16,7 +16,6 @@ from .pytorch_model_template import pytorch_model_template
 
     
 def eval_model(pytorch_source, pytorch_dict, module_name):
-
     # Tricky code
     exec(pytorch_source)
     globals()[module_name] = locals()[module_name]
