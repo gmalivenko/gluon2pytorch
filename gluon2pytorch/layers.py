@@ -168,10 +168,10 @@ def convert_pooling(i, op, gluon_nodes, gluon_dict, pytorch_dict):
 
     else:
         if op['attrs']['pool_type'] == 'max':
-            init_tmp = ' ' * 8 + 'self.x{i} = nn.MaxPool2d(kernel_size={kernel_size}, stride={stride}, padding={padding})'
+            init_tmp = ' ' * 8 + 'self.x{i} = nn.MaxPool2d(kernel_size={kernel_size}, stride={stride}, padding={padding}, count_include_pad={count_include_pad}, ceil_mode={ceil_mode})'
             call_tmp = ' ' * 8 + 'x{i} = self.x{i}(x{inp})'
         elif op['attrs']['pool_type'] == 'avg':
-            init_tmp = ' ' * 8 + 'self.x{i} = nn.AvgPool2d(kernel_size={kernel_size}, stride={stride}, padding={padding})'
+            init_tmp = ' ' * 8 + 'self.x{i} = nn.AvgPool2d(kernel_size={kernel_size}, stride={stride}, padding={padding}, count_include_pad={count_include_pad}, ceil_mode={ceil_mode})'
             call_tmp = ' ' * 8 + 'x{i} = self.x{i}(x{inp})'
         else:
             raise 'Unknown pooling'
@@ -183,6 +183,8 @@ def convert_pooling(i, op, gluon_nodes, gluon_dict, pytorch_dict):
             'kernel_size': op['attrs']['kernel'],
             'stride': op['attrs']['stride'],
             'padding': op['attrs']['pad'],
+            'ceil_mode': op['attrs']['pooling_convention'] == 'full',
+            'count_include_pad': op['attrs']['count_include_pad'] 
         })
 
         call_str = call_tmp.format(**{
