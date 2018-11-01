@@ -31,6 +31,8 @@ def render_module(inits, calls, dst_dir, pytorch_dict, pytorch_module_name):
     Render model.
     """
 
+    inits = [i for i in inits if len(i) > 0]
+
     output = pytorch_model_template.format(**{
         'module_name': pytorch_module_name,
         'module_name_lower': pytorch_module_name.lower(),
