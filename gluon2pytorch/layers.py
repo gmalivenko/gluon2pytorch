@@ -97,6 +97,22 @@ def convert_sigmoid(i, op, gluon_nodes, gluon_dict, pytorch_dict):
     return init_str, call_str
 
 
+def convert_softmax(i, op, gluon_nodes, gluon_dict, pytorch_dict):
+    call_tmp = ' ' * 8 + 'x{i} = F.softmax(x{inp}, dim=len(x.size()) - 1)'
+
+    if len(op['inputs']) == 0:
+        input_name = ''
+    else:
+        input_name = op['inputs'][0]
+
+    call_str = call_tmp.format(**{
+        'i': i,
+        'inp': input_name
+    })
+
+    return '', call_str
+
+
 def convert_batchnorm(i, op, gluon_nodes, gluon_dict, pytorch_dict):
     init_tmp = ' ' * 8 + 'self.x{i} = nn.BatchNorm2d({in_channels}, momentum={momentum}, eps={eps})'
     call_tmp = ' ' * 8 + 'x{i} = self.x{i}(x{inp})'
@@ -381,6 +397,7 @@ CONVERTERS = {
     'Pooling': convert_pooling,
     'relu': convert_relu,
     'sigmoid': convert_sigmoid,
+    'softmax': convert_softmax,
     'elemwise_add': convert_elemwise_add,
     'elemwise_sub': convert_elemwise_sub,
     'elemwise_mul': convert_elemwise_mul,
