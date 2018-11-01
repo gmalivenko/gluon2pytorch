@@ -30,7 +30,6 @@ def check_error(gluon_output, pytorch_output, epsilon=1e-5):
 if __name__ == '__main__':
     print('Test elementwise subtraction:')
 
-    # Create stride_h
     net = ElementwiseSubTest()
 
     # Make sure it's hybrid and initialized

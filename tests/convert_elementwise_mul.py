@@ -30,7 +30,6 @@ def check_error(gluon_output, pytorch_output, epsilon=1e-4):
 if __name__ == '__main__':
     print('Test elementwise multiplication:')
 
-    # Create stride_h
     net = ElementwiseMulTest()
 
     # Make sure it's hybrid and initialized
