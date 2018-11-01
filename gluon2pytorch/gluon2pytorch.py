@@ -125,7 +125,7 @@ def gluon2pytorch(net, dst_dir, pytorch_module_name, debug=True):
             inits.append(init_str)
             calls.append(call_str)
         else:
-            raise AttributeError('Layer isnt supported')
+            raise AttributeError('Layer isn\'t supported')
 
     pytorch_source = render_module(inits, calls, dst_dir, pytorch_dict, pytorch_module_name)
 
