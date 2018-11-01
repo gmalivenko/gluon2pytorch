@@ -14,7 +14,7 @@ def convert_conv(i, op, gluon_nodes, gluon_dict, pytorch_dict):
 
     init_tmp = ' ' * 8 +\
         'self.x{i} = nn.Conv2d(' +\
-        '{in_channels}, {out_channels}, kernel_size={kernel_size}, stride={strides},' +\
+        '{in_channels}, {out_channels}, kernel_size={kernel_size}, stride={strides}, ' +\
         'bias={use_bias}, groups={num_group}, padding={padding})'
     call_tmp = ' ' * 8 +\
         'x{i} = self.x{i}(x{inp})'
@@ -167,14 +167,14 @@ def convert_pooling(i, op, gluon_nodes, gluon_dict, pytorch_dict):
         if op['attrs']['pool_type'] == 'max':
             init_tmp = ' ' * 8 +\
                 'self.x{i} = nn.MaxPool2d(' +\
-                'kernel_size={kernel_size}, stride={stride}, padding={padding},' +\
+                'kernel_size={kernel_size}, stride={stride}, padding={padding}, ' +\
                 'ceil_mode={ceil_mode})'
             call_tmp = ' ' * 8 +\
                 'x{i} = self.x{i}(x{inp})'
         elif op['attrs']['pool_type'] == 'avg':
             init_tmp = ' ' * 8 +\
                 'self.x{i} = nn.AvgPool2d(' +\
-                'kernel_size={kernel_size}, stride={stride}, padding={padding},' +\
+                'kernel_size={kernel_size}, stride={stride}, padding={padding}, ' +\
                 'count_include_pad={count_include_pad}, ceil_mode={ceil_mode})'
             call_tmp = ' ' * 8 +\
                 'x{i} = self.x{i}(x{inp})'
