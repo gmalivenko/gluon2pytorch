@@ -2,9 +2,7 @@
 Source file with all the Gluon->PyTorch convertation functions.
 """
 
-import numpy as np
 import torch
-
 
 
 def convert_conv(i, op, gluon_nodes, gluon_dict, pytorch_dict):
@@ -15,12 +13,14 @@ def convert_conv(i, op, gluon_nodes, gluon_dict, pytorch_dict):
     assert(op['attrs']['layout'] == 'NCHW')
 
     init_tmp = ' ' * 8 +\
-        'self.x{i} = nn.Conv2d({in_channels}, {out_channels}, kernel_size={kernel_size}, stride={strides}, bias={use_bias}, groups={num_group}, padding={padding})'
+        'self.x{i} = nn.Conv2d(' +\
+        '{in_channels}, {out_channels}, kernel_size={kernel_size}, stride={strides},' +\
+        'bias={use_bias}, groups={num_group}, padding={padding})'
     call_tmp = ' ' * 8 +\
         'x{i} = self.x{i}(x{inp})'
 
     weights = gluon_dict[op['name'] + '_weight'].data().asnumpy()
-   
+
     pytorch_dict['x{i}.weight'.format(i=i)] = torch.FloatTensor(weights)
 
     bias = None
@@ -49,14 +49,14 @@ def convert_conv(i, op, gluon_nodes, gluon_dict, pytorch_dict):
         'i': i,
         'inp': input_name
     })
-    
+
     return init_str, call_str
-    
+
 
 def convert_relu(i, op, gluon_nodes, gluon_dict, pytorch_dict):
     call_tmp = ' ' * 8 + 'x{i} = self.x{i}(x{inp})'
     init_tmp = ' ' * 8 + 'self.x{i} = nn.ReLU()'
-    
+
     if len(op['inputs']) == 0:
         input_name = ''
     else:
@@ -78,7 +78,7 @@ def convert_relu(i, op, gluon_nodes, gluon_dict, pytorch_dict):
 def convert_sigmoid(i, op, gluon_nodes, gluon_dict, pytorch_dict):
     call_tmp = ' ' * 8 + 'x{i} = self.x{i}(x{inp})'
     init_tmp = ' ' * 8 + 'self.x{i} = nn.Sigmoid()'
-    
+
     if len(op['inputs']) == 0:
         input_name = ''
     else:
@@ -106,11 +106,11 @@ def convert_batchnorm(i, op, gluon_nodes, gluon_dict, pytorch_dict):
     running_mean = gluon_dict[op['name'] + '_running_mean'].data().asnumpy()
     running_var = gluon_dict[op['name'] + '_running_var'].data().asnumpy()
 
-    pytorch_dict['x{i}.weight'.format(i=i)] = torch.FloatTensor(gamma) 
+    pytorch_dict['x{i}.weight'.format(i=i)] = torch.FloatTensor(gamma)
     pytorch_dict['x{i}.bias'.format(i=i)] = torch.FloatTensor(beta)
 
-    pytorch_dict['x{i}.running_mean'.format(i=i)] = torch.FloatTensor(running_mean)  
-    pytorch_dict['x{i}.running_var'.format(i=i)] = torch.FloatTensor(running_var) 
+    pytorch_dict['x{i}.running_mean'.format(i=i)] = torch.FloatTensor(running_mean)
+    pytorch_dict['x{i}.running_var'.format(i=i)] = torch.FloatTensor(running_var)
 
     if len(op['inputs']) == 0:
         input_name = ''
@@ -165,11 +165,19 @@ def convert_pooling(i, op, gluon_nodes, gluon_dict, pytorch_dict):
 
     else:
         if op['attrs']['pool_type'] == 'max':
-            init_tmp = ' ' * 8 + 'self.x{i} = nn.MaxPool2d(kernel_size={kernel_size}, stride={stride}, padding={padding}, count_include_pad={count_include_pad}, ceil_mode={ceil_mode})'
-            call_tmp = ' ' * 8 + 'x{i} = self.x{i}(x{inp})'
+            init_tmp = ' ' * 8 +\
+                'self.x{i} = nn.MaxPool2d(' +\
+                'kernel_size={kernel_size}, stride={stride}, padding={padding},' +\
+                'ceil_mode={ceil_mode})'
+            call_tmp = ' ' * 8 +\
+                'x{i} = self.x{i}(x{inp})'
         elif op['attrs']['pool_type'] == 'avg':
-            init_tmp = ' ' * 8 + 'self.x{i} = nn.AvgPool2d(kernel_size={kernel_size}, stride={stride}, padding={padding}, count_include_pad={count_include_pad}, ceil_mode={ceil_mode})'
-            call_tmp = ' ' * 8 + 'x{i} = self.x{i}(x{inp})'
+            init_tmp = ' ' * 8 +\
+                'self.x{i} = nn.AvgPool2d(' +\
+                'kernel_size={kernel_size}, stride={stride}, padding={padding},' +\
+                'count_include_pad={count_include_pad}, ceil_mode={ceil_mode})'
+            call_tmp = ' ' * 8 +\
+                'x{i} = self.x{i}(x{inp})'
         else:
             raise 'Unknown pooling'
 
@@ -179,7 +187,7 @@ def convert_pooling(i, op, gluon_nodes, gluon_dict, pytorch_dict):
             'stride': op['attrs']['stride'],
             'padding': op['attrs']['pad'],
             'ceil_mode': op['attrs']['pooling_convention'] == 'full',
-            'count_include_pad': op['attrs']['count_include_pad'] 
+            'count_include_pad': op['attrs']['count_include_pad'] if 'count_include_pad' in op['attrs'] else 'True',
         })
 
         call_str = call_tmp.format(**{
@@ -199,7 +207,6 @@ def convert_elemwise_add(i, op, gluon_nodes, gluon_dict, pytorch_dict):
     else:
         input_names = [str(op['inputs'][0]), str(op['inputs'][1])]
 
-    
     call_str = call_tmp.format(**{
         'i': i,
         'l': input_names[0],
@@ -218,7 +225,6 @@ def convert_elemwise_sub(i, op, gluon_nodes, gluon_dict, pytorch_dict):
     else:
         input_names = [str(op['inputs'][0]), str(op['inputs'][1])]
 
-    
     call_str = call_tmp.format(**{
         'i': i,
         'l': input_names[0],
@@ -237,7 +243,6 @@ def convert_elemwise_mul(i, op, gluon_nodes, gluon_dict, pytorch_dict):
     else:
         input_names = [str(op['inputs'][0]), str(op['inputs'][1])]
 
-    
     call_str = call_tmp.format(**{
         'i': i,
         'l': input_names[0],
@@ -273,7 +278,6 @@ def convert_linear(i, op, gluon_nodes, gluon_dict, pytorch_dict):
     else:
         call_tmp = ' ' * 8 + 'x{i} = self.x{i}(x{inp})'
 
-    
     use_bias = not bool(op['attrs']['no_bias'])
     weights = gluon_dict[op['name'] + '_weight'].data().asnumpy()
     bias = None
@@ -299,10 +303,9 @@ def convert_linear(i, op, gluon_nodes, gluon_dict, pytorch_dict):
         'i': i,
         'inp': input_name
     })
-    
+
     print(init_str, call_str)
     return init_str, call_str
-
 
 
 def convert_concat(i, op, gluon_nodes, gluon_dict, pytorch_dict):
@@ -312,7 +315,7 @@ def convert_concat(i, op, gluon_nodes, gluon_dict, pytorch_dict):
         input_names = ['', str(op['inputs'][0])]
     else:
         input_names = [str(op['inputs'][0]), str(op['inputs'][1])]
-    
+
     call_str = call_tmp.format(**{
         'i': i,
         'l': input_names[0],
@@ -333,12 +336,12 @@ def convert_slice_axis(i, op, gluon_nodes, gluon_dict, pytorch_dict):
         call_tmp = ' ' * 8 + 'x{i} = x{l}[:, :, {start}:{end}]'
     elif op['attrs']['axis'] == '3':
         call_tmp = ' ' * 8 + 'x{i} = x{l}[:, :, :, {start}:{end}]'
-     
+
     if len(op['inputs']) == 0:
         input_names = ['']
     else:
         input_names = [str(op['inputs'][0])]
-    
+
     call_str = call_tmp.format(**{
         'i': i,
         'l': input_names[0],
@@ -352,19 +355,18 @@ def convert_slice_axis(i, op, gluon_nodes, gluon_dict, pytorch_dict):
 
 def convert_mul_scalar(i, op, gluon_nodes, gluon_dict, pytorch_dict):
     call_tmp = ' ' * 8 + 'x{i} = {scalar} * x{l}'
-     
+
     if len(op['inputs']) == 0:
         input_names = ['']
     else:
         input_names = [str(op['inputs'][0])]
-    
+
     call_str = call_tmp.format(**{
         'i': i,
         'l': input_names[0],
         'scalar': op['attrs']['scalar'],
     })
 
-    print(call_str)
     return '', call_str
 
 

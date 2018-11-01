@@ -1,5 +1,4 @@
 import json
-import os
 
 import torch
 import torch.nn as nn
@@ -14,9 +13,12 @@ from .layers import CONVERTERS
 # Import PyTorch model template
 from .pytorch_model_template import pytorch_model_template
 
-    
+
 def eval_model(pytorch_source, pytorch_dict, module_name):
     # Tricky code
+    torch
+    nn
+    F
     exec(pytorch_source)
     globals()[module_name] = locals()[module_name]
     pytorch_model = locals()[module_name]()
@@ -38,7 +40,8 @@ def render_module(inits, calls, dst_dir, pytorch_dict, pytorch_module_name):
     })
 
     if dst_dir is not None:
-        import os, errno
+        import os
+        import errno
 
         try:
             os.makedirs(dst_dir)
@@ -49,7 +52,7 @@ def render_module(inits, calls, dst_dir, pytorch_dict, pytorch_module_name):
         with open(os.path.join(dst_dir, pytorch_module_name.lower() + '.py'), 'w+') as f:
             f.write(output)
             f.close()
-      
+
         torch.save(pytorch_dict, os.path.join(dst_dir, pytorch_module_name.lower() + '.pt'))
 
     return output
@@ -69,8 +72,8 @@ def gluon2pytorch(net, dst_dir, pytorch_module_name, debug=True):
     # Create a symbol to trace net
     x = mx.sym.var('data')
     sym = net(x)
-    
-    # Get JSON-definition of the model    
+
+    # Get JSON-definition of the model
     json_model = json.loads(sym.tojson())['nodes']
 
     # Create empty accumulators
@@ -90,24 +93,20 @@ def gluon2pytorch(net, dst_dir, pytorch_module_name, debug=True):
 
         # It's not 'null'
         is_skipped.append(0)
-        
-        # Create dict with necessary node parameters        
+
+        # Create dict with necessary node parameters
         op = {
             'name': node['name'][:-4],
             'type': node['op'],
         }
 
-        try:
-            # Not all nodes have 'inputs'
-            op['inputs'] = [i - np.sum(is_skipped[:i]) for i in np.array(node['inputs'])[:, 0] if is_skipped[i] != 1]
-            op['inputs'] = np.array(op['inputs'])
-        except:
-            op['inputs'] = []
+        op['inputs'] = [i - np.sum(is_skipped[:i]) for i in np.array(node['inputs'])[:, 0] if is_skipped[i] != 1]
+        op['inputs'] = np.array(op['inputs'])
 
         try:
             # Not all nodes have 'attrs'
             op['attrs'] = node['attrs']
-        except:
+        except KeyError:
             op['attrs'] = {}
 
         # Debug output
