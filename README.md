@@ -88,6 +88,8 @@ Element-wise:
 
 * Addition
 * Concatenation
+* Subtraction
+* Multiplication
 
 ## Models converted with gluon2pytorch:
 
