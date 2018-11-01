@@ -1,8 +1,6 @@
-import argparse
 import torch
 import mxnet as mx
 import numpy as np
-import sys
 from gluon2pytorch import gluon2pytorch
 
 
@@ -22,7 +20,7 @@ if __name__ == '__main__':
 
     from mxnet.gluon.model_zoo import vision as models
     net = models.densenet169(classes=20)
-    
+
     # Make sure it's hybrid and initialized
     net.hybridize()
     net.collect_params().initialize()

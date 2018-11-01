@@ -1,8 +1,6 @@
-import argparse
 import torch
 import mxnet as mx
 import numpy as np
-import sys
 from gluon2pytorch import gluon2pytorch
 
 
@@ -16,6 +14,7 @@ class ElementwiseAddTest(mx.gluon.nn.HybridSequential):
     def hybrid_forward(self, F, x):
         x = self.conv1(x) + self.conv1(x)
         return x
+
 
 def check_error(gluon_output, pytorch_output, epsilon=1e-5):
     pytorch_output = pytorch_output.data.numpy()
@@ -31,9 +30,8 @@ def check_error(gluon_output, pytorch_output, epsilon=1e-5):
 if __name__ == '__main__':
     print('Test elementwise addition:')
 
-    # Create stride_h
     net = ElementwiseAddTest()
-    
+
     # Make sure it's hybrid and initialized
     net.hybridize()
     net.collect_params().initialize()
