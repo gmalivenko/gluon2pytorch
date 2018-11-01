@@ -210,6 +210,25 @@ def convert_elemwise_add(i, op, gluon_nodes, gluon_dict, pytorch_dict):
     return '', call_str
 
 
+def convert_elemwise_sub(i, op, gluon_nodes, gluon_dict, pytorch_dict):
+    call_tmp = ' ' * 8 + 'x{i} = x{l} - x{r}'
+
+    if len(op['inputs']) == 1:
+        input_names = ['', str(op['inputs'][0])]
+    else:
+        input_names = [str(op['inputs'][0]), str(op['inputs'][1])]
+
+    
+    call_str = call_tmp.format(**{
+        'i': i,
+        'l': input_names[0],
+        'r': input_names[1],
+    })
+
+    print(call_str)
+    return '', call_str
+
+
 def convert_flatten(i, op, gluon_nodes, gluon_dict, pytorch_dict):
     call_tmp = ' ' * 8 + 'x{i} = x{l}.view(x{l}.size(0), -1)'
 
@@ -342,6 +361,7 @@ CONVERTERS = {
     'relu': convert_relu,
     'sigmoid': convert_sigmoid,
     'elemwise_add': convert_elemwise_add,
+    'elemwise_sub': convert_elemwise_sub,
     'slice_axis': convert_slice_axis,
     '_mul_scalar': convert_mul_scalar,
 }
