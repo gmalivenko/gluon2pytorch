@@ -38,7 +38,7 @@ if __name__ == '__main__':
     net.hybridize()
     net.collect_params().initialize()
 
-    pytorch_model = gluon2pytorch(net, dst_dir=None, pytorch_module_name='BNTest')
+    pytorch_model = gluon2pytorch(net, [(1, 3, 224, 224)], dst_dir=None, pytorch_module_name='BNTest')
     pytorch_model.eval()
 
     input_np = np.random.uniform(-1, 1, (1, 3, 224, 224))
