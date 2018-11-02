@@ -26,7 +26,7 @@ def eval_model(pytorch_source, pytorch_dict, module_name):
     return pytorch_model
 
 
-def render_module(inits, calls, dst_dir, pytorch_dict, pytorch_module_name):
+def render_module(inits, calls, inputs, last, dst_dir, pytorch_dict, pytorch_module_name):
     """
     Render model.
     """
@@ -37,8 +37,9 @@ def render_module(inits, calls, dst_dir, pytorch_dict, pytorch_module_name):
         'module_name': pytorch_module_name,
         'module_name_lower': pytorch_module_name.lower(),
         'inits': '\n'.join(inits),
+        'inputs': ', '.join(['x' + str(i) for i in inputs]),
         'calls': '\n'.join(calls),
-        'last': len(calls) - 1
+        'last': last,
     })
 
     if dst_dir is not None:
@@ -60,20 +61,21 @@ def render_module(inits, calls, dst_dir, pytorch_dict, pytorch_module_name):
     return output
 
 
-def gluon2pytorch(net, dst_dir, pytorch_module_name, debug=True):
+def gluon2pytorch(net, args, dst_dir, pytorch_module_name, debug=True):
     """
     Function to convert a model.
     """
 
-    x = net(mx.nd.array(np.ones((1, 3, 224, 224))))
-    # print(x)
+    x = [mx.nd.array(np.ones(i)) for i in args]
+    x = net(*x)
 
     # Get network params
     params = net.collect_params()
 
     # Create a symbol to trace net
-    x = mx.sym.var('data')
-    sym = net(x)
+    # x = mx.sym.var('data')
+    x = [mx.sym.var('__input__' + str(i)) for i in range(len(args))]
+    sym = net(*x)
 
     # Get JSON-definition of the model
     json_model = json.loads(sym.tojson())['nodes']
@@ -84,12 +86,16 @@ def gluon2pytorch(net, dst_dir, pytorch_module_name, debug=True):
     pytorch_dict = {}
     inits = []
     calls = []
+    inputs = []
+    last = 0
 
     # Trace model
     for i, node in enumerate(json_model):
         # If the node has 'null' op, it means, that it's not a real op, but only parameter
         # TODO: convert constants
         if node['op'] == 'null':
+            if node['name'].find('__input__') == 0:
+                inputs.append(int(node['name'][9:]))
             is_skipped.append(1)
             continue
 
@@ -102,8 +108,8 @@ def gluon2pytorch(net, dst_dir, pytorch_module_name, debug=True):
             'type': node['op'],
         }
 
-        op['inputs'] = [i - np.sum(is_skipped[:i]) for i in np.array(node['inputs'])[:, 0] if is_skipped[i] != 1]
-        op['inputs'] = np.array(op['inputs'])
+        orginal_inputs = [i for i in np.array(node['inputs'])[:, 0] if i in inputs]
+        op['inputs'] = [i for i in np.array(node['inputs'])[:, 0] if is_skipped[i] != 1 or i in orginal_inputs]
 
         try:
             # Not all nodes have 'attrs'
@@ -121,12 +127,13 @@ def gluon2pytorch(net, dst_dir, pytorch_module_name, debug=True):
 
         # If operation is in available convertors, convert it
         if op['type'] in CONVERTERS:
-            init_str, call_str = CONVERTERS[op['type']](i - np.sum(is_skipped[:i]), op, nodes, params, pytorch_dict)
+            init_str, call_str = CONVERTERS[op['type']](i, op, nodes, params, pytorch_dict)
             inits.append(init_str)
             calls.append(call_str)
+            last = i
         else:
             raise AttributeError('Layer isn\'t supported')
 
-    pytorch_source = render_module(inits, calls, dst_dir, pytorch_dict, pytorch_module_name)
+    pytorch_source = render_module(inits, calls, inputs, last, dst_dir, pytorch_dict, pytorch_module_name)
 
     return eval_model(pytorch_source, pytorch_dict, pytorch_module_name)

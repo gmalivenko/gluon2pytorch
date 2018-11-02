@@ -6,7 +6,7 @@ class {module_name}(nn.Module):
     def __init__(self):
         super({module_name}, self).__init__()
 {inits}
-    def forward(self, x):
+    def forward(self, {inputs}):
 {calls}
         return x{last}
 
