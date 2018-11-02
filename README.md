@@ -53,7 +53,7 @@ if __name__ == '__main__':
 The next step - call the converter:
 
 ```
-    pytorch_model = gluon2pytorch(net, dst_dir=None, pytorch_module_name='ReLUTest')
+    pytorch_model = gluon2pytorch(net, [(1, 3, 224, 224)], dst_dir=None, pytorch_module_name='ReLUTest')
 ```
 
 Finally, we can check the difference
