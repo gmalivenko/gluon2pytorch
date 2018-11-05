@@ -73,8 +73,9 @@ Layers:
 * Linear
 * Conv2d
 * MaxPool2d
+* AvgPool2d
 * Global average pooling (as special case of AdaptiveAvgPool2d)
-* BatchNorm2d
+* BatchNorm2d* Padding2d (constant, reflection, replication)
 
 Reshape:
 
@@ -83,7 +84,9 @@ Reshape:
 Activations:
 
 * ReLU
+* LeakyReLU
 * Sigmoid
+* Softmax
 
 Element-wise:
 
@@ -97,6 +100,8 @@ Element-wise:
 * ResNet*
 * SeNet
 * DenseNet*
+* DPN
+* Mobilenet
 
 ## Code snippets
 Look at the `tests` directory.
