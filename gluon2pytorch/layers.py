@@ -511,4 +511,5 @@ CONVERTERS = {
     '_contrib_AdaptiveAvgPooling2D': convert_adaptive_avg_pool,
     'broadcast_mul': convert_elemwise_mul,
     'LeakyReLU': convert_leaky_relu,
+    'Pad': convert_pad,
 }
