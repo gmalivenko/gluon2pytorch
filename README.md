@@ -72,6 +72,7 @@ Layers:
 
 * Linear
 * Conv2d
+* ConvTranspose2d (Deconvolution)
 * MaxPool2d
 * AvgPool2d
 * Global average pooling (as special case of AdaptiveAvgPool2d)
