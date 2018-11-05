@@ -429,17 +429,26 @@ def convert_dropout(i, op, gluon_nodes, gluon_dict, pytorch_dict):
 
 def convert_leaky_relu(i, op, gluon_nodes, gluon_dict, pytorch_dict):
     call_tmp = ' ' * 8 + 'x{i} = self.x{i}(x{inp})'
-    init_tmp = ' ' * 8 + 'self.x{i} = nn.LeakyReLU(negative_slope={slope})'
+
+    if op['attrs']['act_type'] == 'selu':
+        init_tmp = ' ' * 8 + 'self.x{i} = nn.SELU()'
+    elif op['attrs']['act_type'] == 'leaky':
+        init_tmp = ' ' * 8 + 'self.x{i} = nn.LeakyReLU(negative_slope={slope})'
 
     if len(op['inputs']) == 0:
         input_name = ''
     else:
         input_name = op['inputs'][0]
 
-    init_str = init_tmp.format(**{
-        'i': i,
-        'slope': op['attrs']['slope'],
-    })
+    if op['attrs']['act_type'] == 'selu':
+        init_str = init_tmp.format(**{
+            'i': i,
+        })
+    else:
+        init_str = init_tmp.format(**{
+            'i': i,
+            'slope': op['attrs']['slope'],
+        })
 
     call_str = call_tmp.format(**{
         'i': i,
