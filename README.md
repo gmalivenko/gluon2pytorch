@@ -87,6 +87,7 @@ Activations:
 * LeakyReLU
 * Sigmoid
 * Softmax
+* SELU
 
 Element-wise:
 
