@@ -3,6 +3,7 @@ Source file with all the Gluon->PyTorch convertation functions.
 """
 
 import torch
+import numpy as np
 
 
 def convert_conv(i, op, gluon_nodes, gluon_dict, pytorch_dict):
@@ -439,6 +440,46 @@ def convert_leaky_relu(i, op, gluon_nodes, gluon_dict, pytorch_dict):
         'i': i,
         'slope': op['attrs']['slope'],
     })
+
+    call_str = call_tmp.format(**{
+        'i': i,
+        'inp': input_name,
+    })
+
+    print(init_str, call_str)
+    return init_str, call_str
+
+
+def convert_pad(i, op, gluon_nodes, gluon_dict, pytorch_dict):
+    call_tmp = ' ' * 8 + 'x{i} = self.x{i}(x{inp})'
+    if op['attrs']['mode'] == 'reflect':
+        init_tmp = ' ' * 8 + 'self.x{i} = nn.ReflectionPad2d(padding={padding})'
+    elif op['attrs']['mode'] == 'edge': 
+        init_tmp = ' ' * 8 + 'self.x{i} = nn.ReplicationPad2d(padding={padding})'
+    elif op['attrs']['mode'] == 'constant':
+        init_tmp = ' ' * 8 + 'self.x{i} = nn.ConstantPad2d(padding={padding}, value={constant_value})'
+
+    if len(op['inputs']) == 0:
+        input_name = ''
+    else:
+        input_name = op['inputs'][0]
+
+    op['attrs']['pad_width'] = eval(op['attrs']['pad_width'])
+
+    if np.sum(list(op['attrs']['pad_width'])[:4]) > 0:
+        raise 'Not implemented batch/channel axis padding'
+
+    if op['attrs']['mode'] == 'constant':
+        init_str = init_tmp.format(**{
+            'i': i,
+            'constant_value': op['attrs']['constant_value'] if 'constant_value' in op['attrs'] else 0,
+            'padding': op['attrs']['pad_width'][4:],
+        })
+    else:
+        init_str = init_tmp.format(**{
+            'i': i,
+            'padding': op['attrs']['pad_width'][4:],
+        })
 
     call_str = call_tmp.format(**{
         'i': i,
