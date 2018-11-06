@@ -567,6 +567,24 @@ def convert_pad(i, op, gluon_nodes, gluon_dict, pytorch_dict):
     return init_str, call_str
 
 
+def convert_clip(i, op, gluon_nodes, gluon_dict, pytorch_dict):
+    call_tmp = ' ' * 8 + 'x{i} = x{l}.clamp({min}, {max})'
+
+    if len(op['inputs']) == 0:
+        input_names = ['']
+    else:
+        input_names = [str(op['inputs'][0])]
+
+    call_str = call_tmp.format(**{
+        'i': i,
+        'l': input_names[0],
+        'min': op['attrs']['a_min'],
+        'max': op['attrs']['a_max'],
+    })
+
+    return '', call_str
+
+
 # Here will be converters.
 CONVERTERS = {
     'Activation': convert_activation,
@@ -591,4 +609,5 @@ CONVERTERS = {
     'LeakyReLU': convert_leaky_relu,
     'Pad': convert_pad,
     'Deconvolution': convert_deconvolution,
+    'clip': convert_clip,
 }
