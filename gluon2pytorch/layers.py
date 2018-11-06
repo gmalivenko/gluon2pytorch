@@ -412,6 +412,32 @@ def convert_slice_axis(i, op, gluon_nodes, gluon_dict, pytorch_dict):
     return '', call_str
 
 
+def convert_slice(i, op, gluon_nodes, gluon_dict, pytorch_dict):
+    call_tmp = ' ' * 8 + 'x{i} = x{l}[{slices}]'
+
+    op['attrs']['begin'] = eval(op['attrs']['begin'])
+    op['attrs']['end'] = eval(op['attrs']['end'])
+
+    begins = [str(i) if i != None else '' for i in list(op['attrs']['begin'])]
+    ends = [str(i) if i != None else '' for i in list(op['attrs']['end'])]
+
+    slices = ','.join([':'.join(i) for i in zip(begins, ends)])
+
+    if len(op['inputs']) == 0:
+        input_names = ['']
+    else:
+        input_names = [str(op['inputs'][0])]
+
+    call_str = call_tmp.format(**{
+        'i': i,
+        'l': input_names[0],
+        'slices': slices,
+    })
+
+    return '', call_str
+
+
+
 def convert_mul_scalar(i, op, gluon_nodes, gluon_dict, pytorch_dict):
     call_tmp = ' ' * 8 + 'x{i} = {scalar} * x{l}'
 
@@ -558,6 +584,7 @@ CONVERTERS = {
     'elemwise_sub': convert_elemwise_sub,
     'elemwise_mul': convert_elemwise_mul,
     'slice_axis': convert_slice_axis,
+    'slice': convert_slice,
     '_mul_scalar': convert_mul_scalar,
     '_contrib_AdaptiveAvgPooling2D': convert_adaptive_avg_pool,
     'broadcast_mul': convert_elemwise_mul,
