@@ -374,17 +374,11 @@ def convert_linear(i, op, gluon_nodes, gluon_dict, pytorch_dict):
 
 
 def convert_concat(i, op, gluon_nodes, gluon_dict, pytorch_dict):
-    call_tmp = ' ' * 8 + 'x{i} = torch.cat([x{l}, x{r}], dim={dim})'
-
-    if len(op['inputs']) == 1:
-        input_names = ['', str(op['inputs'][0])]
-    else:
-        input_names = [str(op['inputs'][0]), str(op['inputs'][1])]
+    call_tmp = ' ' * 8 + 'x{i} = torch.cat([{inputs}], dim={dim})'
 
     call_str = call_tmp.format(**{
         'i': i,
-        'l': input_names[0],
-        'r': input_names[1],
+        'inputs': ','.join(['x{0}'.format(i) for i in op['inputs']]),
         'dim': op['attrs']['dim']
     })
 
