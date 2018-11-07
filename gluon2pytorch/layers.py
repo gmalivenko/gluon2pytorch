@@ -585,6 +585,71 @@ def convert_clip(i, op, gluon_nodes, gluon_dict, pytorch_dict):
     return '', call_str
 
 
+
+def convert_reshape(i, op, gluon_nodes, gluon_dict, pytorch_dict):
+    call_tmp = ' ' * 8 + 'x{i} = x{l}.contiguous().view({shape})'
+
+    op['attrs']['shape'] = eval(op['attrs']['shape'])
+
+    if len(op['inputs']) == 0:
+        input_names = ['']
+    else:
+        input_names = [str(op['inputs'][0])]
+
+    pytorch_shape = []
+    r = 0
+    rr = 0
+    while r < len(op['attrs']['shape']):
+        k = op['attrs']['shape'][r]
+
+        if k == 0:
+            pytorch_shape.append('x{1}.size({0})'.format(rr, str(input_names[0])))
+            rr += 1
+        elif k >= 1 or k == -1:
+            pytorch_shape.append(str(k))
+            rr += 1
+        elif k == -2:
+            pytorch_shape.append('*(x{1}.size()[{0}:])'.format(rr, str(input_names[0])))
+        elif k == -3:
+            pytorch_shape.append('x{0}.size({1}) * x{0}.size({2})'.format(str(input_names[0]), rr, rr + 1))
+            rr += 2
+            # r += 1
+        elif k == -4:
+            pytorch_shape.append(str(op['attrs']['shape'][r + 1]))
+            pytorch_shape.append(str('x{0}.size({1}) // {2}'.format(str(input_names[0]), rr, op['attrs']['shape'][r + 1])))
+            rr += 1
+            r += 1
+        r += 1
+        # rr += 1
+    call_str = call_tmp.format(**{
+        'i': i,
+        'l': input_names[0],
+        'shape': ','.join([str(i) for i in pytorch_shape]),
+    })
+    print(call_str)
+    # print(gluon_nodes)
+    # exit(0)
+    return '', call_str
+
+def convert_swap_axis(i, op, gluon_nodes, gluon_dict, pytorch_dict):
+    call_tmp = ' ' * 8 + 'x{i} = x{l}.transpose({axis_a}, {axis_b})'
+
+
+    if len(op['inputs']) == 0:
+        input_names = ['']
+    else:
+        input_names = [str(op['inputs'][0])]
+
+    call_str = call_tmp.format(**{
+        'i': i,
+        'l': input_names[0],
+        'axis_a': op['attrs']['dim1'],
+        'axis_b': op['attrs']['dim2'],
+    })
+
+    return '', call_str
+
+
 # Here will be converters.
 CONVERTERS = {
     'Activation': convert_activation,
@@ -610,4 +675,6 @@ CONVERTERS = {
     'Pad': convert_pad,
     'Deconvolution': convert_deconvolution,
     'clip': convert_clip,
+    'Reshape': convert_reshape,
+    'SwapAxis': convert_swap_axis,
 }
