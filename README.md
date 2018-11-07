@@ -102,11 +102,11 @@ Misc:
 
 * clamp
 
-## Models converted with `gluon2pytorch`
+## Models converted with gluon2pytorch
 
 
 | Model | Top1 | Top5 | Params | FLOPs | Source weights | Remarks |
-| --- | ---: | ---: | ---: | ---: | --- |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | ResNet-10 | 37.09 | 15.55 | 5,418,792 | 892.62M | osmr's repo | Success |
 | ResNet-12 | 35.86 | 14.46 | 5,492,776 | 1,124.23M | osmr's repo | Success |
 | ResNet-14 | 32.85 | 12.41 | 5,788,200 | 1,355.64M | osmr's repo | Success |
@@ -177,6 +177,7 @@ Misc:
 | MobileNetV2 x1.0 | 28.51 | 9.90 | 3,504,960 | 320.19M | Gluon Model Zoo| Success |
 | NASNet-A-Mobile | 25.37 | 7.95 | 5,289,978 | 587.29M | Cadene's repo | Success |
 | InceptionV3 | 21.22 | 5.59 | 23,834,568 | 5,746.72M | Gluon Model Zoo| Success |
+
 
 ## Code snippets
 Look at the `tests` directory.
