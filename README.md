@@ -76,7 +76,8 @@ Layers:
 * MaxPool2d
 * AvgPool2d
 * Global average pooling (as special case of AdaptiveAvgPool2d)
-* BatchNorm2d* Padding2d (constant, reflection, replication)
+* BatchNorm2d* 
+* Padding2d (constant, reflection, replication)
 
 Reshape:
 
@@ -96,6 +97,10 @@ Element-wise:
 * Concatenation
 * Subtraction
 * Multiplication
+
+Misc:
+
+* clamp
 
 ## Models converted with gluon2pytorch:
 
