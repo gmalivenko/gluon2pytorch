@@ -104,7 +104,8 @@ Misc:
 
 ## Models converted with `gluon2pytorch`
 
-| Model | Top1 | Top5 | Params | FLOPs | Source weights | Remarks
+
+| Model | Top1 | Top5 | Params | FLOPs | Source weights | Remarks |
 | --- | ---: | ---: | ---: | ---: | --- |
 | ResNet-10 | 37.09 | 15.55 | 5,418,792 | 892.62M | osmr's repo | Success |
 | ResNet-12 | 35.86 | 14.46 | 5,492,776 | 1,124.23M | osmr's repo | Success |
