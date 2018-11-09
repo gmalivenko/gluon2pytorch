@@ -102,7 +102,7 @@ Misc:
 
 * clamp
 
-## Models converted with gluon2pytorch
+## Classification models converted with gluon2pytorch
 
 
 | Model | Top1 | Top5 | Params | FLOPs | Source weights | Remarks |
