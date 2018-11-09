@@ -652,6 +652,29 @@ def convert_swap_axis(i, op, gluon_nodes, gluon_dict, pytorch_dict):
     return '', call_str
 
 
+def convert_bilinear_resize2d(i, op, gluon_nodes, gluon_dict, pytorch_dict):
+    call_tmp = ' ' * 8 + 'x{i} = self.x{i}(x{inp})'
+    init_tmp = ' ' * 8 + 'self.x{i} = nn.Upsample(size={size}, mode=\'bilinear\', align_corners=True)'
+
+    if len(op['inputs']) == 0:
+        input_name = ''
+    else:
+        input_name = op['inputs'][0]
+
+    init_str = init_tmp.format(**{
+        'i': i,
+        'size': (int(op['attrs']['height']), int(op['attrs']['width'])),
+    })
+
+    call_str = call_tmp.format(**{
+        'i': i,
+        'inp': input_name,
+    })
+
+    print(init_str, call_str)
+    return init_str, call_str
+
+
 # Here will be converters.
 CONVERTERS = {
     'Activation': convert_activation,
@@ -679,4 +702,5 @@ CONVERTERS = {
     'clip': convert_clip,
     'Reshape': convert_reshape,
     'SwapAxis': convert_swap_axis,
+    '_contrib_BilinearResize2D': convert_bilinear_resize2d,
 }
