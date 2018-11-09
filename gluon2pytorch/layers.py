@@ -15,7 +15,7 @@ def convert_conv(i, op, gluon_nodes, gluon_dict, pytorch_dict):
 
     init_tmp = ' ' * 8 +\
         'self.x{i} = nn.Conv2d(' +\
-        '{in_channels}, {out_channels}, kernel_size={kernel_size}, stride={strides}, ' +\
+        '{in_channels}, {out_channels}, kernel_size={kernel_size}, stride={strides}, dilation={dilation}, ' +\
         'bias={use_bias}, groups={num_group}, padding={padding})'
     call_tmp = ' ' * 8 +\
         'x{i} = self.x{i}(x{inp})'
@@ -43,6 +43,7 @@ def convert_conv(i, op, gluon_nodes, gluon_dict, pytorch_dict):
         'kernel_size': op['attrs']['kernel'],
         'strides': op['attrs']['stride'],
         'padding': op['attrs']['pad'],
+        'dilation': op['attrs']['dilate'],
         'num_group': op['attrs']['num_group']
     })
 
@@ -630,6 +631,7 @@ def convert_reshape(i, op, gluon_nodes, gluon_dict, pytorch_dict):
     # print(gluon_nodes)
     # exit(0)
     return '', call_str
+
 
 def convert_swap_axis(i, op, gluon_nodes, gluon_dict, pytorch_dict):
     call_tmp = ' ' * 8 + 'x{i} = x{l}.transpose({axis_a}, {axis_b})'
