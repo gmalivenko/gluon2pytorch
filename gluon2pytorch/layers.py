@@ -320,7 +320,7 @@ def convert_elemwise_mul(i, op, gluon_nodes, gluon_dict, pytorch_dict):
 
 
 def convert_flatten(i, op, gluon_nodes, gluon_dict, pytorch_dict):
-    call_tmp = ' ' * 8 + 'x{i} = x{l}.view(x{l}.size(0), -1)'
+    call_tmp = ' ' * 8 + 'x{i} = x{l}.view([int(x{l}.size(0)), -1])'
 
     if len(op['inputs']) == 0:
         input_names = ['']
@@ -340,7 +340,7 @@ def convert_linear(i, op, gluon_nodes, gluon_dict, pytorch_dict):
     init_tmp = ' ' * 8 + 'self.x{i} = nn.Linear({in_channels}, {out_channels}, bias={use_bias})'
 
     if op['attrs']['flatten'] == 'True':
-        call_tmp = ' ' * 8 + 'x{i} = self.x{i}(x{inp}.view(x{inp}.size(0), -1))'
+        call_tmp = ' ' * 8 + 'x{i} = self.x{i}(x{inp}.view([int(x{inp}.size(0)), -1]))'
     else:
         call_tmp = ' ' * 8 + 'x{i} = self.x{i}(x{inp})'
 
@@ -675,6 +675,23 @@ def convert_bilinear_resize2d(i, op, gluon_nodes, gluon_dict, pytorch_dict):
     return init_str, call_str
 
 
+def convert_copy(i, op, gluon_nodes, gluon_dict, pytorch_dict):
+    call_tmp = ' ' * 8 + 'x{i} = x{l}.clone()'
+
+
+    if len(op['inputs']) == 0:
+        input_names = ['']
+    else:
+        input_names = [str(op['inputs'][0])]
+
+    call_str = call_tmp.format(**{
+        'i': i,
+        'l': input_names[0]
+    })
+
+    return '', call_str
+
+
 # Here will be converters.
 CONVERTERS = {
     'Activation': convert_activation,
@@ -703,4 +720,5 @@ CONVERTERS = {
     'Reshape': convert_reshape,
     'SwapAxis': convert_swap_axis,
     '_contrib_BilinearResize2D': convert_bilinear_resize2d,
+    '_copy': convert_copy,
 }
