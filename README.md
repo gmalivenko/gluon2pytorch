@@ -101,6 +101,8 @@ Element-wise:
 Misc:
 
 * clamp
+* BilinearResize2D
+
 
 ## Classification models converted with gluon2pytorch
 
