@@ -180,6 +180,14 @@ Misc:
 | NASNet-A-Mobile | 25.37 | 7.95 | 5,289,978 | 587.29M | Cadene's repo | Success |
 | InceptionV3 | 21.22 | 5.59 | 23,834,568 | 5,746.72M | Gluon Model Zoo| Success |
 
+## Segmentation models converted with gluon2pytorch
+
+
+| Name | Model | pixAcc | mIoU  | Source weights | Remarks |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| fcn_resnet101_coco | FCN | 92.2 | 66.2 |  Gluon Model Zoo | Success |
+| fcn_resnet101_voc | FCN | N/A | 83.6 |  Gluon Model Zoo | Success |
+
 
 ## Code snippets
 Look at the `tests` directory.
