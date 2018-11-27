@@ -77,8 +77,10 @@ def gluon2pytorch(net, args, dst_dir, pytorch_module_name, debug=True):
     x = [mx.sym.var('__input__' + str(i)) for i in range(len(args))]
     sym = net(*x)
 
-    group = mx.sym.Group(sym)
-    print(group.tojson())
+    if len(sym) > 1:
+        group = mx.sym.Group(sym)
+    else:
+        group = sym
 
     # Get JSON-definition of the model
     json_model = json.loads(group.tojson())['nodes']
