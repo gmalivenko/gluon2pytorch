@@ -8,7 +8,7 @@ class {module_name}(nn.Module):
 {inits}
     def forward(self, {inputs}):
 {calls}
-        return x{last}
+        return {outputs}
 
 if __name__ == '__main__':
     net = {module_name}()

@@ -26,7 +26,7 @@ def eval_model(pytorch_source, pytorch_dict, module_name):
     return pytorch_model
 
 
-def render_module(inits, calls, inputs, last, dst_dir, pytorch_dict, pytorch_module_name):
+def render_module(inits, calls, inputs, outputs, dst_dir, pytorch_dict, pytorch_module_name):
     """
     Render model.
     """
@@ -39,7 +39,7 @@ def render_module(inits, calls, inputs, last, dst_dir, pytorch_dict, pytorch_mod
         'inits': '\n'.join(inits),
         'inputs': ', '.join(['x' + str(i) for i in inputs]),
         'calls': '\n'.join(calls),
-        'last': last,
+        'outputs': ', '.join(['x' + str(i) for i in outputs]),
     })
 
     if dst_dir is not None:
@@ -77,8 +77,11 @@ def gluon2pytorch(net, args, dst_dir, pytorch_module_name, debug=True):
     x = [mx.sym.var('__input__' + str(i)) for i in range(len(args))]
     sym = net(*x)
 
+    group = mx.sym.Group(sym)
+    print(group.tojson())
+
     # Get JSON-definition of the model
-    json_model = json.loads(sym.tojson())['nodes']
+    json_model = json.loads(group.tojson())['nodes']
 
     # Create empty accumulators
     nodes = []
@@ -87,6 +90,7 @@ def gluon2pytorch(net, args, dst_dir, pytorch_module_name, debug=True):
     inits = []
     calls = []
     inputs = []
+    outputs = [i[0] for i in json.loads(group.tojson())['heads']] 
     last = 0
 
     # Trace model
@@ -130,10 +134,9 @@ def gluon2pytorch(net, args, dst_dir, pytorch_module_name, debug=True):
             init_str, call_str = CONVERTERS[op['type']](i, op, nodes, params, pytorch_dict)
             inits.append(init_str)
             calls.append(call_str)
-            last = i
         else:
             raise AttributeError('Layer isn\'t supported')
 
-    pytorch_source = render_module(inits, calls, inputs, last, dst_dir, pytorch_dict, pytorch_module_name)
+    pytorch_source = render_module(inits, calls, inputs, outputs, dst_dir, pytorch_dict, pytorch_module_name)
 
     return eval_model(pytorch_source, pytorch_dict, pytorch_module_name)
