@@ -181,7 +181,7 @@ Misc:
 | InceptionV3 | 21.22 | 5.59 | 23,834,568 | 5,746.72M | Gluon Model Zoo| Success |
 | AirNet50-1x64d (r=2) | 22.48 | 6.21 | 27,425,864 | 4,757.77M | soeaver/AirNet-PyTorch | Success |
 | AirNet50-1x64d (r=16) | 22.91 | 6.46 | 25,714,952 | 4,385.54M | soeaver/AirNet-PyTorch | Success |
-
+| AirNeXt50-32x4d (r=2) | 20.87 | 5.51 | 27,604,296 | 5,321.18M | soeaver/AirNet-PyTorch | Success |
 
 ## Segmentation models converted with gluon2pytorch
 
