@@ -184,7 +184,7 @@ Misc:
 | AirNeXt50-32x4d (r=2) | 20.87 | 5.51 | 27,604,296 | 5,321.18M | soeaver/AirNet-PyTorch | Success |
 | DiracNetV2-18 | 31.47 | 11.70 | 11,511,784 | 1,798.43M | szagoruyko/diracnets | Success |
 | DiracNetV2-34 | 28.75 | 9.93 | 21,616,232 | 3,649.37M | szagoruyko/diracnets | Success |
-
+| DARTS | 26.70 | 8.74 | 4,718,752 | 537.64M | szagoruyko/diracnets | Success |
 
 ## Segmentation models converted with gluon2pytorch
 
