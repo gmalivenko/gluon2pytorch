@@ -182,6 +182,9 @@ Misc:
 | AirNet50-1x64d (r=2) | 22.48 | 6.21 | 27,425,864 | 4,757.77M | soeaver/AirNet-PyTorch | Success |
 | AirNet50-1x64d (r=16) | 22.91 | 6.46 | 25,714,952 | 4,385.54M | soeaver/AirNet-PyTorch | Success |
 | AirNeXt50-32x4d (r=2) | 20.87 | 5.51 | 27,604,296 | 5,321.18M | soeaver/AirNet-PyTorch | Success |
+| DiracNetV2-18 | 31.47 | 11.70 | 11,511,784 | 1,798.43M | szagoruyko/diracnets | Success |
+| DiracNetV2-34 | 28.75 | 9.93 | 21,616,232 | 3,649.37M | szagoruyko/diracnets | Success |
+
 
 ## Segmentation models converted with gluon2pytorch
 
