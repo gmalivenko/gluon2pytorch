@@ -185,6 +185,7 @@ Misc:
 | DiracNetV2-18 | 31.47 | 11.70 | 11,511,784 | 1,798.43M | szagoruyko/diracnets | Success |
 | DiracNetV2-34 | 28.75 | 9.93 | 21,616,232 | 3,649.37M | szagoruyko/diracnets | Success |
 | DARTS | 26.70 | 8.74 | 4,718,752 | 537.64M | szagoruyko/diracnets | Success |
+| PolyNet | 19.10 | 4.52 | 95,366,600 | 34,768.84M |  Cadene's repo | Success |
 
 ## Segmentation models converted with gluon2pytorch
 
