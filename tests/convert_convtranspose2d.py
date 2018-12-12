@@ -37,11 +37,11 @@ def check_error(gluon_output, pytorch_output, epsilon=1e-5):
 if __name__ == '__main__':
     print('Test convolution:')
 
-    for kernel_h in [1, 2, 3, 5]:
-        for stride_h in [1, 2, 3, 5]:
-            for filters in [1, 3, 8, 16]:
-                for padding_h in [0, 1, 2, 3]:
-                	for groups in [1, 2, 4]:
+    for kernel_h in [1, 2]:
+        for stride_h in [1, 2]:
+            for filters in [1, 3, 8]:
+                for padding_h in [0, 1, 2]:
+                	for groups in [1, 2]:
 	                    for use_bias in [True, False]:
 	                        # Create stride_h
 	                        net = Conv2dTransposeTest(
