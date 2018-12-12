@@ -25,9 +25,9 @@ def convert_conv(i, op, gluon_nodes, gluon_dict, pytorch_dict):
     pytorch_dict['x{i}.weight'.format(i=i)] = torch.FloatTensor(weights)
 
     bias = None
-    use_bias = not bool(op['attrs']['no_bias'])
+    use_bias = not eval(op['attrs']['no_bias'])
     if use_bias:
-        bias = gluon_dict[op['name'] + '_bias'].data.asnumpy()
+        bias = gluon_dict[op['name'] + '_bias'].data().asnumpy()
         pytorch_dict['x{i}.bias'.format(i=i)] = torch.FloatTensor(bias)
 
     if len(op['inputs']) == 0:
@@ -74,9 +74,9 @@ def convert_deconvolution(i, op, gluon_nodes, gluon_dict, pytorch_dict):
     pytorch_dict['x{i}.weight'.format(i=i)] = torch.FloatTensor(weights)
 
     bias = None
-    use_bias = not bool(op['attrs']['no_bias'])
+    use_bias = not eval(op['attrs']['no_bias'])
     if use_bias:
-        bias = gluon_dict[op['name'] + '_bias'].data.asnumpy()
+        bias = gluon_dict[op['name'] + '_bias'].data().asnumpy()
         pytorch_dict['x{i}.bias'.format(i=i)] = torch.FloatTensor(bias)
 
     if len(op['inputs']) == 0:
@@ -212,7 +212,7 @@ def convert_pooling(i, op, gluon_nodes, gluon_dict, pytorch_dict):
     else:
         input_name = op['inputs'][0]
 
-    if op['attrs']['global_pool'] == 'True':
+    if 'global_pool' in op['attrs'] and op['attrs']['global_pool'] == 'True':
         if op['attrs']['pool_type'] == 'max':
             init_tmp = ''
             call_tmp = ' ' * 8 + 'x{i} = F.adaptive_max_pool2d(x{inp}, (1, 1))'
@@ -251,7 +251,7 @@ def convert_pooling(i, op, gluon_nodes, gluon_dict, pytorch_dict):
             'i': i,
             'kernel_size': op['attrs']['kernel'],
             'stride': op['attrs']['stride'],
-            'padding': op['attrs']['pad'],
+            'padding': op['attrs']['pad'] if 'pad' in op['attrs'] else [0, 0],
             'ceil_mode': op['attrs']['pooling_convention'] == 'full',
             'count_include_pad': op['attrs']['count_include_pad'] if 'count_include_pad' in op['attrs'] else 'True',
         })
@@ -344,13 +344,13 @@ def convert_linear(i, op, gluon_nodes, gluon_dict, pytorch_dict):
     else:
         call_tmp = ' ' * 8 + 'x{i} = self.x{i}(x{inp})'
 
-    use_bias = not bool(op['attrs']['no_bias'])
+    use_bias = not eval(op['attrs']['no_bias'])
     weights = gluon_dict[op['name'] + '_weight'].data().asnumpy()
     bias = None
 
     pytorch_dict['x{i}.weight'.format(i=i)] = torch.FloatTensor(weights)
     if use_bias:
-        bias = gluon_dict[op['name'] + '_bias'].data.asnumpy()
+        bias = gluon_dict[op['name'] + '_bias'].data().asnumpy()
         pytorch_dict['x{i}.bias'.format(i=i)] = torch.FloatTensor(bias)
 
     if len(op['inputs']) == 0:
@@ -436,7 +436,6 @@ def convert_slice(i, op, gluon_nodes, gluon_dict, pytorch_dict):
     })
 
     return '', call_str
-
 
 
 def convert_mul_scalar(i, op, gluon_nodes, gluon_dict, pytorch_dict):
