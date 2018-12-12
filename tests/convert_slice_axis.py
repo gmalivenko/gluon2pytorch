@@ -4,13 +4,13 @@ import numpy as np
 from gluon2pytorch import gluon2pytorch
 
 
-class SliceTest(mx.gluon.nn.HybridSequential):
+class SliceAxisTest(mx.gluon.nn.HybridSequential):
     def __init__(self):
-        super(SliceTest, self).__init__()
+        super(SliceAxisTest, self).__init__()
         from mxnet.gluon import nn
 
     def hybrid_forward(self, F, x):
-        return F.slice(x, begin=(0, 0, 1, 1), end=(None, None, None, None))
+        return F.slice_axis(x, axis=3, begin=0, end=5)
 
 
 def check_error(gluon_output, pytorch_output, epsilon=1e-5):
@@ -25,15 +25,15 @@ def check_error(gluon_output, pytorch_output, epsilon=1e-5):
 
 
 if __name__ == '__main__':
-    print('Test slice:')
+    print('Test slice axis:')
 
-    net = SliceTest()
+    net = SliceAxisTest()
 
     # Make sure it's hybrid and initialized
     net.hybridize()
     net.collect_params().initialize()
 
-    pytorch_model = gluon2pytorch(net, [(1, 3, 224, 224)], dst_dir=None, pytorch_module_name='SliceTest')
+    pytorch_model = gluon2pytorch(net, [(1, 3, 224, 224)], dst_dir=None, pytorch_module_name='SliceAxisTest')
 
     input_np = np.random.uniform(-1, 1, (1, 3, 224, 224))
 
