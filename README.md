@@ -188,6 +188,7 @@ Misc:
 | DARTS | 26.70 | 8.74 | 4,718,752 | 537.64M | szagoruyko/diracnets | Success |
 | PolyNet | 19.10 | 4.52 | 95,366,600 | 34,768.84M |  Cadene's repo | Success |
 | ZfNet | ? | ? | ? | ? | osmr's repo | Success |
+| FishNet-150 | 22.85 | 6.38 | 24,959,400 | 6,435.02M | osmr's repo | Success |
 
 ## Segmentation models converted with gluon2pytorch
 
