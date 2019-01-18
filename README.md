@@ -102,6 +102,7 @@ Misc:
 
 * clamp
 * BilinearResize2D
+* LRN
 
 
 ## Classification models converted with gluon2pytorch
@@ -186,6 +187,7 @@ Misc:
 | DiracNetV2-34 | 28.75 | 9.93 | 21,616,232 | 3,649.37M | szagoruyko/diracnets | Success |
 | DARTS | 26.70 | 8.74 | 4,718,752 | 537.64M | szagoruyko/diracnets | Success |
 | PolyNet | 19.10 | 4.52 | 95,366,600 | 34,768.84M |  Cadene's repo | Success |
+| ZfNet | ? | ? | ? | ? | osmr's repo | Success |
 
 ## Segmentation models converted with gluon2pytorch
 
