@@ -741,6 +741,23 @@ def convert_broadcast_like(i, op, gluon_nodes, gluon_dict, pytorch_dict):
     return '', call_str
 
 
+def convert_sum(i, op, gluon_nodes, gluon_dict, pytorch_dict):
+    call_tmp = ' ' * 8 + 'x{i} = x{l}.sum({dim})'
+
+    if len(op['inputs']) == 0:
+        input_names = ['', '']
+    else:
+        input_names = [str(op['inputs'][0])]
+
+    call_str = call_tmp.format(**{
+        'i': i,
+        'l': input_names[0],
+        'dim': eval(op['attrs']['axis']),
+    })
+
+    return '', call_str
+
+
 def convert_max(i, op, gluon_nodes, gluon_dict, pytorch_dict):
     call_tmp = ' ' * 8 + 'x{i} = x{l}.max({dim})'
 
@@ -806,6 +823,26 @@ def convert_lrn(i, op, gluon_nodes, gluon_dict, pytorch_dict):
     return init_str, call_str
 
 
+def convert_upsampling(i, op, gluon_nodes, gluon_dict, pytorch_dict):
+    if op['attrs']['sample_type'] == 'nearest':
+        call_tmp = ' ' * 8 + 'x{i} = F.upsample_nearest(x{l}, scale_factor={scale})'
+
+        if len(op['inputs']) == 0:
+            input_names = ['', '']
+        else:
+            input_names = [str(op['inputs'][0])]
+
+        call_str = call_tmp.format(**{
+            'i': i,
+            'l': input_names[0],
+            'scale': eval(op['attrs']['scale']),
+        })
+
+        return '', call_str
+    else:
+        return convert_bilinear_resize2d(i, op, gluon_nodes, gluon_dict, pytorch_dict)
+
+
 # Here will be converters.
 CONVERTERS = {
     'Activation': convert_activation,
@@ -838,7 +875,9 @@ CONVERTERS = {
     '_copy': convert_copy,
     'expand_dims': convert_expand_dims,
     'broadcast_like': convert_broadcast_like,
+    'sum': convert_sum,
     'max': convert_max,
     'mean': convert_mean,
     'LRN': convert_lrn,
+    'UpSampling': convert_upsampling,
 }
