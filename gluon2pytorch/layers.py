@@ -438,6 +438,23 @@ def convert_slice(i, op, gluon_nodes, gluon_dict, pytorch_dict):
     return '', call_str
 
 
+def convert_plus_scalar(i, op, gluon_nodes, gluon_dict, pytorch_dict):
+    call_tmp = ' ' * 8 + 'x{i} = {scalar} + x{l}'
+
+    if len(op['inputs']) == 0:
+        input_names = ['']
+    else:
+        input_names = [str(op['inputs'][0])]
+
+    call_str = call_tmp.format(**{
+        'i': i,
+        'l': input_names[0],
+        'scalar': op['attrs']['scalar'],
+    })
+
+    return '', call_str
+
+
 def convert_mul_scalar(i, op, gluon_nodes, gluon_dict, pytorch_dict):
     call_tmp = ' ' * 8 + 'x{i} = {scalar} * x{l}'
 
@@ -677,7 +694,6 @@ def convert_bilinear_resize2d(i, op, gluon_nodes, gluon_dict, pytorch_dict):
 def convert_copy(i, op, gluon_nodes, gluon_dict, pytorch_dict):
     call_tmp = ' ' * 8 + 'x{i} = x{l}.clone()'
 
-
     if len(op['inputs']) == 0:
         input_names = ['']
     else:
@@ -689,6 +705,105 @@ def convert_copy(i, op, gluon_nodes, gluon_dict, pytorch_dict):
     })
 
     return '', call_str
+
+
+def convert_expand_dims(i, op, gluon_nodes, gluon_dict, pytorch_dict):
+    call_tmp = ' ' * 8 + 'x{i} = x{l}.unsqueeze({dim})'
+
+    if len(op['inputs']) == 0:
+        input_names = ['']
+    else:
+        input_names = [str(op['inputs'][0])]
+
+    call_str = call_tmp.format(**{
+        'i': i,
+        'l': input_names[0],
+        'dim': eval(op['attrs']['axis'])
+    })
+
+    return '', call_str
+
+
+def convert_broadcast_like(i, op, gluon_nodes, gluon_dict, pytorch_dict):
+    call_tmp = ' ' * 8 + 'x{i} = x{l}.view(x{s}.size())'
+
+    if len(op['inputs']) == 0:
+        input_names = ['', '']
+    else:
+        input_names = [str(op['inputs'][0]), str(op['inputs'][1])]
+
+    call_str = call_tmp.format(**{
+        'i': i,
+        'l': input_names[0],
+        's': input_names[1],
+    })
+
+    return '', call_str
+
+
+def convert_max(i, op, gluon_nodes, gluon_dict, pytorch_dict):
+    call_tmp = ' ' * 8 + 'x{i} = x{l}.max({dim})'
+
+    if len(op['inputs']) == 0:
+        input_names = ['', '']
+    else:
+        input_names = [str(op['inputs'][0])]
+
+    call_str = call_tmp.format(**{
+        'i': i,
+        'l': input_names[0],
+        'dim': eval(op['attrs']['axis']),
+    })
+
+    return '', call_str
+
+
+def convert_mean(i, op, gluon_nodes, gluon_dict, pytorch_dict):
+    call_tmp = ' ' * 8 + 'x{i} = x{l}.mean({dim})'
+
+    if len(op['inputs']) == 0:
+        input_names = ['', '']
+    else:
+        input_names = [str(op['inputs'][0])]
+
+    call_str = call_tmp.format(**{
+        'i': i,
+        'l': input_names[0],
+        'dim': eval(op['attrs']['axis']),
+    })
+
+    return '', call_str
+
+
+def convert_lrn(i, op, gluon_nodes, gluon_dict, pytorch_dict):
+    call_tmp = ' ' * 8 + 'x{i} = self.x{i}(x{inp})'
+    init_tmp = ' ' * 8 + 'self.x{i} = nn.LocalResponseNorm(size={size}, k={knorm}, alpha={alpha}, beta={beta})'
+
+    # size: amount of neighbouring channels used for normalization
+    #     alpha: multiplicative factor. Default: 0.0001
+    #     beta: exponent. Default: 0.75
+    #     k: additive factor. Default: 1
+
+    if len(op['inputs']) == 0:
+        input_name = ''
+    else:
+        input_name = op['inputs'][0]
+
+    init_str = init_tmp.format(**{
+        'i': i,
+        'size': eval(op['attrs']['nsize']),
+        'knorm': eval(op['attrs']['knorm']) if 'knorm' in op['attrs'] else 2.0,
+        'alpha': eval(op['attrs']['alpha']) if 'alpha' in op['attrs'] else 0.0001,
+        'beta': eval(op['attrs']['beta']) if 'beta' in op['attrs'] else 0.75
+    })
+
+    call_str = call_tmp.format(**{
+        'i': i,
+        'inp': input_name
+    })
+
+    print(init_str, call_str)
+    return init_str, call_str
 
 
 # Here will be converters.
@@ -709,6 +824,7 @@ CONVERTERS = {
     'elemwise_mul': convert_elemwise_mul,
     'slice_axis': convert_slice_axis,
     'slice': convert_slice,
+    '_plus_scalar': convert_plus_scalar,
     '_mul_scalar': convert_mul_scalar,
     '_contrib_AdaptiveAvgPooling2D': convert_adaptive_avg_pool,
     'broadcast_mul': convert_elemwise_mul,
@@ -720,4 +836,9 @@ CONVERTERS = {
     'SwapAxis': convert_swap_axis,
     '_contrib_BilinearResize2D': convert_bilinear_resize2d,
     '_copy': convert_copy,
+    'expand_dims': convert_expand_dims,
+    'broadcast_like': convert_broadcast_like,
+    'max': convert_max,
+    'mean': convert_mean,
+    'LRN': convert_lrn,
 }

@@ -113,10 +113,13 @@ def gluon2pytorch(net, args, dst_dir, pytorch_module_name, debug=True):
             'name': node['name'][:-4],
             'type': node['op'],
         }
-
-        orginal_inputs = [i for i in np.array(node['inputs'])[:, 0] if i in inputs]
-        op['inputs'] = [i for i in np.array(node['inputs'])[:, 0] if is_skipped[i] != 1 or i in orginal_inputs]
-
+        print(op, node)
+        if len(node['inputs']) > 0:
+            orginal_inputs = [i for i in np.array(node['inputs'])[:, 0] if i in inputs]
+            op['inputs'] = [i for i in np.array(node['inputs'])[:, 0] if is_skipped[i] != 1 or i in orginal_inputs]
+        else:
+            print(json_model)
+            op['inputs'] = []
         try:
             # Not all nodes have 'attrs'
             op['attrs'] = node['attrs']
