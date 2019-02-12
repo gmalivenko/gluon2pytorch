@@ -17,7 +17,7 @@ def transform_names(i, op, names_dict):
     return input_names, output_name
 
 
-def convert_conv(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
+def convert_conv(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug):
     """
     Convert Conv2d layer.
     """
@@ -39,6 +39,7 @@ def convert_conv(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
 
     bias = None
     use_bias = not eval(op['attrs']['no_bias'])
+
     if use_bias:
         bias = gluon_dict[op['name'] + '_bias'].data().asnumpy()
         pytorch_dict['{i}.bias'.format(i=output_name)] = torch.FloatTensor(bias)
@@ -63,7 +64,7 @@ def convert_conv(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
     return init_str, call_str
 
 
-def convert_deconvolution(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
+def convert_deconvolution(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug):
     """
     Convert Conv2dTranspose layer.
     """
@@ -85,6 +86,7 @@ def convert_deconvolution(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_di
 
     bias = None
     use_bias = not eval(op['attrs']['no_bias'])
+
     if use_bias:
         bias = gluon_dict[op['name'] + '_bias'].data().asnumpy()
         pytorch_dict['{i}.bias'.format(i=output_name)] = torch.FloatTensor(bias)
@@ -108,7 +110,7 @@ def convert_deconvolution(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_di
     return init_str, call_str
 
 
-def convert_relu(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
+def convert_relu(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug):
     call_tmp = ' ' * 8 + '{i} = self.{i}({inp})'
     init_tmp = ' ' * 8 + 'self.{i} = nn.ReLU()'
 
@@ -123,11 +125,10 @@ def convert_relu(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
         'inp': input_names[0]
     })
 
-    print(init_str, call_str)
     return init_str, call_str
 
 
-def convert_sigmoid(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
+def convert_sigmoid(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug):
     call_tmp = ' ' * 8 + '{i} = self.{i}({inp})'
     init_tmp = ' ' * 8 + 'self.{i} = nn.Sigmoid()'
 
@@ -142,11 +143,10 @@ def convert_sigmoid(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
         'inp': input_names[0]
     })
 
-    print(init_str, call_str)
     return init_str, call_str
 
 
-def convert_softmax(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
+def convert_softmax(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug):
     call_tmp = ' ' * 8 + '{i} = F.softmax({inp}, dim=len(x.size()) - 1)'
 
     input_names, output_name = transform_names(i, op, names_dict)
@@ -159,7 +159,7 @@ def convert_softmax(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
     return '', call_str
 
 
-def convert_batchnorm(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
+def convert_batchnorm(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug):
     init_tmp = ' ' * 8 + 'self.{i} = nn.BatchNorm2d({in_channels}, momentum={momentum}, eps={eps})'
     call_tmp = ' ' * 8 + '{i} = self.{i}({inp})'
 
@@ -188,18 +188,17 @@ def convert_batchnorm(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
         'inp': input_names[0]
     })
 
-    print(init_str, call_str)
     return init_str, call_str
 
 
-def convert_activation(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
+def convert_activation(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug):
     if op['attrs']['act_type'] == 'relu':
-        return convert_relu(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict)
+        return convert_relu(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug)
     elif op['attrs']['act_type'] == 'sigmoid':
-        return convert_sigmoid(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict)
+        return convert_sigmoid(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug)
 
 
-def convert_pooling(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
+def convert_pooling(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug):
     input_names, output_name = transform_names(i, op, names_dict)
 
     if 'global_pool' in op['attrs'] and op['attrs']['global_pool'] == 'True':
@@ -251,11 +250,10 @@ def convert_pooling(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
             'inp': input_names[0]
         })
 
-    print(init_str, call_str)
     return init_str, call_str
 
 
-def convert_elemwise_add(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
+def convert_elemwise_add(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug):
     call_tmp = ' ' * 8 + '{i} = {l} + {r}'
 
     input_names, output_name = transform_names(i, op, names_dict)
@@ -266,11 +264,10 @@ def convert_elemwise_add(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dic
         'r': input_names[1],
     })
 
-    print(call_str)
     return '', call_str
 
 
-def convert_elemwise_sub(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
+def convert_elemwise_sub(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug):
     call_tmp = ' ' * 8 + '{i} = {l} - {r}'
 
     input_names, output_name = transform_names(i, op, names_dict)
@@ -281,11 +278,10 @@ def convert_elemwise_sub(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dic
         'r': input_names[1],
     })
 
-    print(call_str)
     return '', call_str
 
 
-def convert_elemwise_mul(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
+def convert_elemwise_mul(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug):
     call_tmp = ' ' * 8 + '{i} = {l} * {r}'
 
     input_names, output_name = transform_names(i, op, names_dict)
@@ -296,11 +292,10 @@ def convert_elemwise_mul(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dic
         'r': input_names[1],
     })
 
-    print(call_str)
     return '', call_str
 
 
-def convert_flatten(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
+def convert_flatten(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug):
     call_tmp = ' ' * 8 + '{i} = {l}.view([int({l}.size(0)), -1])'
 
     input_names, output_name = transform_names(i, op, names_dict)
@@ -310,11 +305,10 @@ def convert_flatten(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
         'l': input_names[0],
     })
 
-    print(call_str)
     return '', call_str
 
 
-def convert_linear(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
+def convert_linear(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug):
     init_tmp = ' ' * 8 + 'self.{i} = nn.Linear({in_channels}, {out_channels}, bias={use_bias})'
 
     input_names, output_name = transform_names(i, op, names_dict)
@@ -346,11 +340,10 @@ def convert_linear(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
         'inp': input_names[0]
     })
 
-    print(init_str, call_str)
     return init_str, call_str
 
 
-def convert_concat(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
+def convert_concat(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug):
     call_tmp = ' ' * 8 + '{i} = torch.cat([{inputs}], dim={dim})'
 
     call_str = call_tmp.format(**{
@@ -359,11 +352,10 @@ def convert_concat(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
         'dim': op['attrs']['dim']
     })
 
-    print(call_str)
     return '', call_str
 
 
-def convert_slice_axis(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
+def convert_slice_axis(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug):
     if op['attrs']['axis'] == '0':
         call_tmp = ' ' * 8 + '{i} = {l}[{start}:{end}]'
     elif op['attrs']['axis'] == '1':
@@ -385,11 +377,10 @@ def convert_slice_axis(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict)
         'end': op['attrs']['end'] if op['attrs']['end'] != 'None' else '',
     })
 
-    print(call_str)
     return '', call_str
 
 
-def convert_slice(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
+def convert_slice(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug):
     call_tmp = ' ' * 8 + '{i} = {l}[{slices}]'
 
     op['attrs']['begin'] = eval(op['attrs']['begin'])
@@ -414,7 +405,7 @@ def convert_slice(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
     return '', call_str
 
 
-def convert_plus_scalar(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
+def convert_plus_scalar(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug):
     call_tmp = ' ' * 8 + '{i} = {scalar} + {l}'
 
     if len(op['inputs']) == 0:
@@ -431,7 +422,7 @@ def convert_plus_scalar(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict
     return '', call_str
 
 
-def convert_mul_scalar(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
+def convert_mul_scalar(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug):
     call_tmp = ' ' * 8 + '{i} = {scalar} * {l}'
 
     if len(op['inputs']) == 0:
@@ -448,7 +439,7 @@ def convert_mul_scalar(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict)
     return '', call_str
 
 
-def convert_adaptive_avg_pool(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
+def convert_adaptive_avg_pool(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug):
     call_tmp = ' ' * 8 + '{i} = F.adaptive_avg_pool2d({l}, {size})'
 
     if len(op['inputs']) == 0:
@@ -465,7 +456,7 @@ def convert_adaptive_avg_pool(i, op, gluon_nodes, gluon_dict, pytorch_dict, name
     return '', call_str
 
 
-def convert_dropout(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
+def convert_dropout(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug):
     call_tmp = ' ' * 8 + '{i} = self.{i}({inp})'
     init_tmp = ' ' * 8 + 'self.{i} = nn.Dropout(p={p})'
 
@@ -484,11 +475,10 @@ def convert_dropout(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
         'inp': input_name,
     })
 
-    print(init_str, call_str)
     return init_str, call_str
 
 
-def convert_leaky_relu(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
+def convert_leaky_relu(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug):
     call_tmp = ' ' * 8 + '{i} = self.{i}({inp})'
 
     if op['attrs']['act_type'] == 'selu':
@@ -516,11 +506,10 @@ def convert_leaky_relu(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict)
         'inp': input_name,
     })
 
-    print(init_str, call_str)
     return init_str, call_str
 
 
-def convert_pad(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
+def convert_pad(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug):
     call_tmp = ' ' * 8 + '{i} = self.{i}({inp})'
     if op['attrs']['mode'] == 'reflect':
         init_tmp = ' ' * 8 + 'self.{i} = nn.ReflectionPad2d(padding={padding})'
@@ -556,11 +545,10 @@ def convert_pad(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
         'inp': input_name,
     })
 
-    print(init_str, call_str)
     return init_str, call_str
 
 
-def convert_clip(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
+def convert_clip(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug):
     call_tmp = ' ' * 8 + '{i} = {l}.clamp({min}, {max})'
 
     if len(op['inputs']) == 0:
@@ -579,7 +567,7 @@ def convert_clip(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
 
 
 
-def convert_reshape(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
+def convert_reshape(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug):
     call_tmp = ' ' * 8 + '{i} = {l}.contiguous().view({shape})'
 
     op['attrs']['shape'] = eval(op['attrs']['shape'])
@@ -619,13 +607,11 @@ def convert_reshape(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
         'l': input_names[0],
         'shape': ','.join([str(i) for i in pytorch_shape]),
     })
-    print(call_str)
-    # print(gluon_nodes)
-    # exit(0)
+
     return '', call_str
 
 
-def convert_swap_axis(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
+def convert_swap_axis(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug):
     call_tmp = ' ' * 8 + '{i} = {l}.transpose({axis_a}, {axis_b})'
 
 
@@ -644,7 +630,7 @@ def convert_swap_axis(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
     return '', call_str
 
 
-def convert_bilinear_resize2d(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
+def convert_bilinear_resize2d(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug):
     call_tmp = ' ' * 8 + '{i} = self.{i}({inp})'
     init_tmp = ' ' * 8 + 'self.{i} = nn.Upsample(size={size}, mode=\'bilinear\', align_corners=True)'
 
@@ -663,11 +649,10 @@ def convert_bilinear_resize2d(i, op, gluon_nodes, gluon_dict, pytorch_dict, name
         'inp': input_name,
     })
 
-    print(init_str, call_str)
     return init_str, call_str
 
 
-def convert_copy(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
+def convert_copy(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug):
     call_tmp = ' ' * 8 + '{i} = {l}.clone()'
 
     if len(op['inputs']) == 0:
@@ -683,7 +668,7 @@ def convert_copy(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
     return '', call_str
 
 
-def convert_expand_dims(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
+def convert_expand_dims(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug):
     call_tmp = ' ' * 8 + '{i} = {l}.unsqueeze({dim})'
 
     if len(op['inputs']) == 0:
@@ -700,7 +685,7 @@ def convert_expand_dims(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict
     return '', call_str
 
 
-def convert_broadcast_like(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
+def convert_broadcast_like(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug):
     call_tmp = ' ' * 8 + '{i} = {l}.view(x{s}.size())'
 
     if len(op['inputs']) == 0:
@@ -717,7 +702,7 @@ def convert_broadcast_like(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_d
     return '', call_str
 
 
-def convert_sum(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
+def convert_sum(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug):
     call_tmp = ' ' * 8 + '{i} = {l}.sum({dim})'
 
     if len(op['inputs']) == 0:
@@ -734,7 +719,7 @@ def convert_sum(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
     return '', call_str
 
 
-def convert_max(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
+def convert_max(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug):
     call_tmp = ' ' * 8 + '{i} = {l}.max({dim})'
 
     if len(op['inputs']) == 0:
@@ -751,7 +736,7 @@ def convert_max(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
     return '', call_str
 
 
-def convert_mean(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
+def convert_mean(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug):
     call_tmp = ' ' * 8 + '{i} = {l}.mean({dim})'
 
     if len(op['inputs']) == 0:
@@ -768,14 +753,9 @@ def convert_mean(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
     return '', call_str
 
 
-def convert_lrn(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
+def convert_lrn(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug):
     call_tmp = ' ' * 8 + '{i} = self.{i}({inp})'
     init_tmp = ' ' * 8 + 'self.{i} = nn.LocalResponseNorm(size={size}, k={knorm}, alpha={alpha}, beta={beta})'
-
-    # size: amount of neighbouring channels used for normalization
-    #     alpha: multiplicative factor. Default: 0.0001
-    #     beta: exponent. Default: 0.75
-    #     k: additive factor. Default: 1
 
     if len(op['inputs']) == 0:
         input_name = ''
@@ -795,11 +775,10 @@ def convert_lrn(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
         'inp': input_name
     })
 
-    print(init_str, call_str)
     return init_str, call_str
 
 
-def convert_upsampling(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict):
+def convert_upsampling(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug):
     if op['attrs']['sample_type'] == 'nearest':
         call_tmp = ' ' * 8 + '{i} = F.upsample_nearest({l}, scale_factor={scale})'
 
@@ -816,7 +795,7 @@ def convert_upsampling(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict)
 
         return '', call_str
     else:
-        return convert_bilinear_resize2d(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict)
+        return convert_bilinear_resize2d(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug)
 
 
 # Here will be converters.

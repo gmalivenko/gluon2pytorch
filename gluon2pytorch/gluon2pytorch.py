@@ -75,7 +75,6 @@ def gluon2pytorch(net, args, dst_dir, pytorch_module_name, debug=True, keep_name
     params = net.collect_params()
 
     # Create a symbol to trace net
-    # x = mx.sym.var('data')
     x = [mx.sym.var('__input__' + str(i)) for i in range(len(args))]
     sym = net(*x)
 
@@ -101,6 +100,7 @@ def gluon2pytorch(net, args, dst_dir, pytorch_module_name, debug=True, keep_name
         names_dict = {}
     else:
         names_dict = None
+
     # Trace model
     for i, node in enumerate(json_model):
         # If the node has 'null' op, it means, that it's not a real op, but only parameter
@@ -145,7 +145,7 @@ def gluon2pytorch(net, args, dst_dir, pytorch_module_name, debug=True, keep_name
 
         # If operation is in available convertors, convert it
         if op['type'] in CONVERTERS:
-            init_str, call_str = CONVERTERS[op['type']](i, op, nodes, params, pytorch_dict, names_dict)
+            init_str, call_str = CONVERTERS[op['type']](i, op, nodes, params, pytorch_dict, names_dict, debug)
             inits.append(init_str)
             calls.append(call_str)
         else:
