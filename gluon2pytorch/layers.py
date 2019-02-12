@@ -10,9 +10,9 @@ def transform_names(i, op, names_dict):
     if len(op['inputs']) == 0:
         input_names = ['']
     else:
-        input_names = [str(i) if names_dict is None else names_dict[i] for i in op['inputs']]
+        input_names = ['x' + str(i) if names_dict is None else names_dict[i] for i in op['inputs']]
 
-    output_name = i if names_dict is None else names_dict[i]
+    output_name = 'x' + str(i) if names_dict is None else names_dict[i]
 
     return input_names, output_name
 

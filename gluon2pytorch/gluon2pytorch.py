@@ -21,8 +21,10 @@ def eval_model(pytorch_source, pytorch_dict, module_name):
     F
     exec(pytorch_source)
     globals()[module_name] = locals()[module_name]
+
     pytorch_model = locals()[module_name]()
     pytorch_model.load_state_dict(pytorch_dict)
+
     return pytorch_model
 
 
@@ -95,13 +97,16 @@ def gluon2pytorch(net, args, dst_dir, pytorch_module_name, debug=True, keep_name
     outputs = [i[0] for i in json.loads(group.tojson())['heads']] 
     last = 0
 
-    names_dict = {}
-
+    if keep_names:
+        names_dict = {}
+    else:
+        names_dict = None
     # Trace model
     for i, node in enumerate(json_model):
         # If the node has 'null' op, it means, that it's not a real op, but only parameter
         # TODO: convert constants
-        names_dict[i] = node['name']
+        if keep_names:
+            names_dict[i] = node['name']
 
         if node['op'] == 'null':
             if node['name'].find('__input__') == 0:
