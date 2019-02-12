@@ -37,9 +37,9 @@ def render_module(inits, calls, inputs, outputs, dst_dir, pytorch_dict, pytorch_
         'module_name': pytorch_module_name,
         'module_name_lower': pytorch_module_name.lower(),
         'inits': '\n'.join(inits),
-        'inputs': ', '.join(['x' + str(i) for i in inputs]),
+        'inputs': inputs,
         'calls': '\n'.join(calls),
-        'outputs': ', '.join(['x' + str(i) for i in outputs]),
+        'outputs': outputs,
     })
 
     if dst_dir is not None:
@@ -61,7 +61,7 @@ def render_module(inits, calls, inputs, outputs, dst_dir, pytorch_dict, pytorch_
     return output
 
 
-def gluon2pytorch(net, args, dst_dir, pytorch_module_name, debug=True):
+def gluon2pytorch(net, args, dst_dir, pytorch_module_name, debug=True, keep_names=False):
     """
     Function to convert a model.
     """
@@ -95,10 +95,14 @@ def gluon2pytorch(net, args, dst_dir, pytorch_module_name, debug=True):
     outputs = [i[0] for i in json.loads(group.tojson())['heads']] 
     last = 0
 
+    names_dict = {}
+
     # Trace model
     for i, node in enumerate(json_model):
         # If the node has 'null' op, it means, that it's not a real op, but only parameter
         # TODO: convert constants
+        names_dict[i] = node['name']
+
         if node['op'] == 'null':
             if node['name'].find('__input__') == 0:
                 inputs.append(int(node['name'][9:]))
@@ -136,11 +140,18 @@ def gluon2pytorch(net, args, dst_dir, pytorch_module_name, debug=True):
 
         # If operation is in available convertors, convert it
         if op['type'] in CONVERTERS:
-            init_str, call_str = CONVERTERS[op['type']](i, op, nodes, params, pytorch_dict)
+            init_str, call_str = CONVERTERS[op['type']](i, op, nodes, params, pytorch_dict, names_dict)
             inits.append(init_str)
             calls.append(call_str)
         else:
             raise AttributeError('Layer isn\'t supported')
+
+    if names_dict is not None:
+        inputs = ', '.join([names_dict[i] for i in inputs])
+        outputs = ', '.join([names_dict[i] for i in outputs])
+    else:
+        inputs = ', '.join(['x' + str(i) for i in inputs])
+        outputs = ', '.join(['x' + str(i) for i in outputs])
 
     pytorch_source = render_module(inits, calls, inputs, outputs, dst_dir, pytorch_dict, pytorch_module_name)
 
