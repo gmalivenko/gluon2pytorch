@@ -344,11 +344,13 @@ def convert_linear(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, deb
 
 
 def convert_concat(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug):
+    input_names, output_name = transform_names(i, op, names_dict)
+
     call_tmp = ' ' * 8 + '{i} = torch.cat([{inputs}], dim={dim})'
 
     call_str = call_tmp.format(**{
-        'i': i,
-        'inputs': ','.join(['x{0}'.format(i) for i in op['inputs']]),
+        'i': output_name,
+        'inputs': ','.join(input_names),
         'dim': op['attrs']['dim']
     })
 
@@ -457,6 +459,8 @@ def convert_adaptive_avg_pool(i, op, gluon_nodes, gluon_dict, pytorch_dict, name
 
 
 def convert_dropout(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug):
+    input_names, output_name = transform_names(i, op, names_dict)
+
     call_tmp = ' ' * 8 + '{i} = self.{i}({inp})'
     init_tmp = ' ' * 8 + 'self.{i} = nn.Dropout(p={p})'
 
@@ -466,13 +470,13 @@ def convert_dropout(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, de
         input_name = op['inputs'][0]
 
     init_str = init_tmp.format(**{
-        'i': i if names_dict is None else names_dict[i],
+        'i': output_name,
         'p': op['attrs']['p'],
     })
 
     call_str = call_tmp.format(**{
-        'i': i if names_dict is None else names_dict[i],
-        'inp': input_name,
+        'i': output_name,
+        'inp': input_names[0],
     })
 
     return init_str, call_str
@@ -510,6 +514,8 @@ def convert_leaky_relu(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict,
 
 
 def convert_pad(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug):
+    input_names, output_name = transform_names(i, op, names_dict)
+
     call_tmp = ' ' * 8 + '{i} = self.{i}({inp})'
     if op['attrs']['mode'] == 'reflect':
         init_tmp = ' ' * 8 + 'self.{i} = nn.ReflectionPad2d(padding={padding})'
@@ -518,11 +524,6 @@ def convert_pad(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug)
     elif op['attrs']['mode'] == 'constant':
         init_tmp = ' ' * 8 + 'self.{i} = nn.ConstantPad2d(padding={padding}, value={constant_value})'
 
-    if len(op['inputs']) == 0:
-        input_name = ''
-    else:
-        input_name = op['inputs'][0]
-
     op['attrs']['pad_width'] = eval(op['attrs']['pad_width'])
 
     if np.sum(list(op['attrs']['pad_width'])[:4]) > 0:
@@ -530,19 +531,19 @@ def convert_pad(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug)
 
     if op['attrs']['mode'] == 'constant':
         init_str = init_tmp.format(**{
-            'i': i if names_dict is None else names_dict[i],
+            'i': output_name,
             'constant_value': op['attrs']['constant_value'] if 'constant_value' in op['attrs'] else 0,
             'padding': op['attrs']['pad_width'][4:],
         })
     else:
         init_str = init_tmp.format(**{
-            'i': i if names_dict is None else names_dict[i],
+            'i': output_name,
             'padding': op['attrs']['pad_width'][4:],
         })
 
     call_str = call_tmp.format(**{
-        'i': i if names_dict is None else names_dict[i],
-        'inp': input_name,
+        'i': output_name,
+        'inp': input_names[0],
     })
 
     return init_str, call_str
@@ -631,22 +632,19 @@ def convert_swap_axis(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, 
 
 
 def convert_bilinear_resize2d(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug):
+    input_names, output_name = transform_names(i, op, names_dict)
+
     call_tmp = ' ' * 8 + '{i} = self.{i}({inp})'
     init_tmp = ' ' * 8 + 'self.{i} = nn.Upsample(size={size}, mode=\'bilinear\', align_corners=True)'
 
-    if len(op['inputs']) == 0:
-        input_name = ''
-    else:
-        input_name = op['inputs'][0]
-
     init_str = init_tmp.format(**{
-        'i': i if names_dict is None else names_dict[i],
+        'i': output_name,
         'size': (int(op['attrs']['height']), int(op['attrs']['width'])),
     })
 
     call_str = call_tmp.format(**{
-        'i': i if names_dict is None else names_dict[i],
-        'inp': input_name,
+        'i': output_name,
+        'inp': input_names[0],
     })
 
     return init_str, call_str
