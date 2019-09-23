@@ -92,7 +92,7 @@ def convert_deconvolution(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_di
         pytorch_dict['{i}.bias'.format(i=output_name)] = torch.FloatTensor(bias)
 
     init_str = init_tmp.format(**{
-        'i': i if names_dict is None else names_dict[i],
+        'i': output_name,
         'in_channels': weights.shape[0],
         'out_channels': int(op['attrs']['num_filter']),
         'use_bias': use_bias,
@@ -442,15 +442,12 @@ def convert_mul_scalar(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict,
 
 
 def convert_adaptive_avg_pool(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug):
+    input_names, output_name = transform_names(i, op, names_dict)
+
     call_tmp = ' ' * 8 + '{i} = F.adaptive_avg_pool2d({l}, {size})'
 
-    if len(op['inputs']) == 0:
-        input_names = ['']
-    else:
-        input_names = [str(op['inputs'][0])]
-
     call_str = call_tmp.format(**{
-        'i': i if names_dict is None else names_dict[i],
+        'i': output_name,
         'l': input_names[0],
         'size': op['attrs']['output_size'],
     })
@@ -569,14 +566,12 @@ def convert_clip(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug
 
 
 def convert_reshape(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug):
+    input_names, output_name = transform_names(i, op, names_dict)
+
     call_tmp = ' ' * 8 + '{i} = {l}.contiguous().view({shape})'
 
     op['attrs']['shape'] = eval(op['attrs']['shape'])
 
-    if len(op['inputs']) == 0:
-        input_names = ['']
-    else:
-        input_names = [str(op['inputs'][0])]
 
     pytorch_shape = []
     r = 0
@@ -585,26 +580,26 @@ def convert_reshape(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, de
         k = op['attrs']['shape'][r]
 
         if k == 0:
-            pytorch_shape.append('x{1}.size({0})'.format(rr, str(input_names[0])))
+            pytorch_shape.append('{1}.size({0})'.format(rr, str(input_names[0])))
             rr += 1
         elif k >= 1 or k == -1:
             pytorch_shape.append(str(k))
             rr += 1
         elif k == -2:
-            pytorch_shape.append('*(x{1}.size()[{0}:])'.format(rr, str(input_names[0])))
+            pytorch_shape.append('*({1}.size()[{0}:])'.format(rr, str(input_names[0])))
         elif k == -3:
-            pytorch_shape.append('x{0}.size({1}) * x{0}.size({2})'.format(str(input_names[0]), rr, rr + 1))
+            pytorch_shape.append('{0}.size({1}) * {0}.size({2})'.format(str(input_names[0]), rr, rr + 1))
             rr += 2
             # r += 1
         elif k == -4:
             pytorch_shape.append(str(op['attrs']['shape'][r + 1]))
-            pytorch_shape.append(str('x{0}.size({1}) // {2}'.format(str(input_names[0]), rr, op['attrs']['shape'][r + 1])))
+            pytorch_shape.append(str('{0}.size({1}) // {2}'.format(str(input_names[0]), rr, op['attrs']['shape'][r + 1])))
             rr += 1
             r += 1
         r += 1
         # rr += 1
     call_str = call_tmp.format(**{
-        'i': i if names_dict is None else names_dict[i],
+        'i': output_name,
         'l': input_names[0],
         'shape': ','.join([str(i) for i in pytorch_shape]),
     })
@@ -613,16 +608,11 @@ def convert_reshape(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, de
 
 
 def convert_swap_axis(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug):
+    input_names, output_name = transform_names(i, op, names_dict)
     call_tmp = ' ' * 8 + '{i} = {l}.transpose({axis_a}, {axis_b})'
 
-
-    if len(op['inputs']) == 0:
-        input_names = ['']
-    else:
-        input_names = [str(op['inputs'][0])]
-
     call_str = call_tmp.format(**{
-        'i': i if names_dict is None else names_dict[i],
+        'i':output_name,
         'l': input_names[0],
         'axis_a': op['attrs']['dim1'],
         'axis_b': op['attrs']['dim2'],
@@ -651,15 +641,12 @@ def convert_bilinear_resize2d(i, op, gluon_nodes, gluon_dict, pytorch_dict, name
 
 
 def convert_copy(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug):
+    input_names, output_name = transform_names(i, op, names_dict)
+
     call_tmp = ' ' * 8 + '{i} = {l}.clone()'
 
-    if len(op['inputs']) == 0:
-        input_names = ['']
-    else:
-        input_names = [str(op['inputs'][0])]
-
     call_str = call_tmp.format(**{
-        'i': i if names_dict is None else names_dict[i],
+        'i': output_name,
         'l': input_names[0]
     })
 
@@ -667,15 +654,12 @@ def convert_copy(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug
 
 
 def convert_expand_dims(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug):
+    input_names, output_name = transform_names(i, op, names_dict)
+
     call_tmp = ' ' * 8 + '{i} = {l}.unsqueeze({dim})'
 
-    if len(op['inputs']) == 0:
-        input_names = ['']
-    else:
-        input_names = [str(op['inputs'][0])]
-
     call_str = call_tmp.format(**{
-        'i': i if names_dict is None else names_dict[i],
+        'i': output_name,
         'l': input_names[0],
         'dim': eval(op['attrs']['axis'])
     })
@@ -684,15 +668,12 @@ def convert_expand_dims(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict
 
 
 def convert_broadcast_like(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug):
+    input_names, output_name = transform_names(i, op, names_dict)
+
     call_tmp = ' ' * 8 + '{i} = {l}.view(x{s}.size())'
 
-    if len(op['inputs']) == 0:
-        input_names = ['', '']
-    else:
-        input_names = [str(op['inputs'][0]), str(op['inputs'][1])]
-
     call_str = call_tmp.format(**{
-        'i': i if names_dict is None else names_dict[i],
+        'i': output_name,
         'l': input_names[0],
         's': input_names[1],
     })
@@ -701,15 +682,11 @@ def convert_broadcast_like(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_d
 
 
 def convert_sum(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug):
+    input_names, output_name = transform_names(i, op, names_dict)
     call_tmp = ' ' * 8 + '{i} = {l}.sum({dim})'
 
-    if len(op['inputs']) == 0:
-        input_names = ['', '']
-    else:
-        input_names = [str(op['inputs'][0])]
-
     call_str = call_tmp.format(**{
-        'i': i if names_dict is None else names_dict[i],
+        'i':output_name,
         'l': input_names[0],
         'dim': eval(op['attrs']['axis']),
     })
@@ -718,15 +695,11 @@ def convert_sum(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug)
 
 
 def convert_max(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug):
+    input_names, output_name = transform_names(i, op, names_dict)
     call_tmp = ' ' * 8 + '{i} = {l}.max({dim})'
 
-    if len(op['inputs']) == 0:
-        input_names = ['', '']
-    else:
-        input_names = [str(op['inputs'][0])]
-
     call_str = call_tmp.format(**{
-        'i': i if names_dict is None else names_dict[i],
+        'i':output_name,
         'l': input_names[0],
         'dim': eval(op['attrs']['axis']),
     })
@@ -735,15 +708,12 @@ def convert_max(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug)
 
 
 def convert_mean(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug):
+    input_names, output_name = transform_names(i, op, names_dict)
+
     call_tmp = ' ' * 8 + '{i} = {l}.mean({dim})'
 
-    if len(op['inputs']) == 0:
-        input_names = ['', '']
-    else:
-        input_names = [str(op['inputs'][0])]
-
     call_str = call_tmp.format(**{
-        'i': i if names_dict is None else names_dict[i],
+        'i': output_name,
         'l': input_names[0],
         'dim': eval(op['attrs']['axis']),
     })
@@ -752,16 +722,13 @@ def convert_mean(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug
 
 
 def convert_lrn(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug):
+    input_names, output_name = transform_names(i, op, names_dict)
+
     call_tmp = ' ' * 8 + '{i} = self.{i}({inp})'
     init_tmp = ' ' * 8 + 'self.{i} = nn.LocalResponseNorm(size={size}, k={knorm}, alpha={alpha}, beta={beta})'
 
-    if len(op['inputs']) == 0:
-        input_name = ''
-    else:
-        input_name = op['inputs'][0]
-
     init_str = init_tmp.format(**{
-        'i': i if names_dict is None else names_dict[i],
+        'i': output_name,
         'size': eval(op['attrs']['nsize']),
         'knorm': eval(op['attrs']['knorm']) if 'knorm' in op['attrs'] else 2.0,
         'alpha': eval(op['attrs']['alpha']) if 'alpha' in op['attrs'] else 0.0001,
@@ -769,24 +736,21 @@ def convert_lrn(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug)
     })
 
     call_str = call_tmp.format(**{
-        'i': i if names_dict is None else names_dict[i],
-        'inp': input_name
+        'i': output_name,
+        'inp': input_names[0]
     })
 
     return init_str, call_str
 
 
 def convert_upsampling(i, op, gluon_nodes, gluon_dict, pytorch_dict, names_dict, debug):
+    input_names, output_name = transform_names(i, op, names_dict)
+
     if op['attrs']['sample_type'] == 'nearest':
         call_tmp = ' ' * 8 + '{i} = F.upsample_nearest({l}, scale_factor={scale})'
 
-        if len(op['inputs']) == 0:
-            input_names = ['', '']
-        else:
-            input_names = [str(op['inputs'][0])]
-
         call_str = call_tmp.format(**{
-            'i': i if names_dict is None else names_dict[i],
+            'i': output_name,
             'l': input_names[0],
             'scale': eval(op['attrs']['scale']),
         })
