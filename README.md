@@ -60,9 +60,11 @@ The next step - call the converter:
 Finally, we can check the difference
 
 ```
+    import torch
     input_np = np.random.uniform(-1, 1, (1, 3, 224, 224))
 
     gluon_output = net(mx.nd.array(input_np))
+    pytorch_model.eval()
     pytorch_output = pytorch_model(torch.FloatTensor(input_np))
     check_error(gluon_output, pytorch_output)
 ```
